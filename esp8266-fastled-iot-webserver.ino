@@ -16,8 +16,8 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #define FASTLED_ESP8266_RAW_PIN_ORDER       //To use raw NodeMCU pin numbers
-#define FASTLED_INTERRUPT_RETRY_COUNT 0
-#define FASTLED_ALLOW_INTERRUPTS 0
+//#define FASTLED_INTERRUPT_RETRY_COUNT 0
+//#define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
 FASTLED_USING_NAMESPACE
 extern "C" {
@@ -668,7 +668,7 @@ void setup() {
 	Serial.begin(115200);
 
 	delay(100);
-	Serial.setDebugOutput(true);
+	//Serial.setDebugOutput(true);
 
 #if LED_TYPE == WS2812 || LED_TYPE == WS2812B || LED_TYPE == WS2811 || LED_TYPE == WS2813 || LED_TYPE == NEOPIXEL
 	FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);         // WS2812 (Neopixel)
