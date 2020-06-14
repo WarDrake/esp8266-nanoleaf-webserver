@@ -1117,13 +1117,6 @@ void loop() {
 
 	//  handleIrInput();
 
-	if (power == 0) {
-		fill_solid(leds, NUM_LEDS, CRGB::Black);
-		FastLED.show();
-		// FastLED.delay(15);
-		return;
-	}
-
 	static bool hasConnected = false;
 	EVERY_N_SECONDS(1) {
 		if (WiFi.status() != WL_CONNECTED) {
@@ -1155,13 +1148,11 @@ void loop() {
 			mqttClient.setCallback(mqttCallback);
 			mqttConnected = false;
 		}
-		else {
-			sendStatus();
-		}
 		if (!mqttConnected) {
 			mqttConnected = true;
 			Serial.println("Connecting to MQTT...");
 			if (mqttClient.connect(HOSTNAME, mqttUser, mqttPassword)) {
+				mqttClient.setKeepAlive(10);
 				Serial.println("connected \n");
 
 				Serial.println("Subscribing to MQTT Topics \n");
@@ -1206,7 +1197,18 @@ void loop() {
 			}
 		}
 	}
+
+	EVERY_N_SECONDS(90) {
+		sendStatus();
+	}
 #endif
+
+	if (power == 0) {
+		fill_solid(leds, NUM_LEDS, CRGB::Black);
+		FastLED.show();
+		// FastLED.delay(15);
+		return;
+	}
 
 	// EVERY_N_SECONDS(10) {
 	//   Serial.print( F("Heap: ") ); Serial.println(system_get_free_heap_size());
