@@ -1185,6 +1185,8 @@ void loop() {
 					}
 					if (mqttClient.endPublish() == true) {
 						Serial.println("Configuration Publishing Finished");
+						sendStatus();
+						Serial.println("Sending Initial Status");
 					}
 				}
 				else {
