@@ -1,19 +1,17 @@
 # ESP8266 FastLED IoT Webserver
 
-<a href="https://github.com/NimmLor/esp8266-fastled-iot-webserver/graphs/contributors" alt="Contributors"><img src="https://img.shields.io/github/contributors/NimmLor/esp8266-fastled-iot-webserver" /></a> <a href="https://github.com/NimmLor/esp8266-fastled-iot-webserver/releases" alt="Downloads"><img src="https://img.shields.io/github/downloads/NimmLor/esp8266-fastled-iot-webserver/total"/></a><a href="https://github.com/NimmLor/esp8266-fastled-iot-webserver/commits/master" alt="Downloads">
-<img src="https://img.shields.io/github/commits-since/NimmLor/esp8266-fastled-iot-webserver/latest?include_prereleases" /></a>
-	
-	
+<a href="https://github.com/NimmLor/esp8266-fastled-iot-webserver/graphs/contributors" alt="Contributors"><img src="https://img.shields.io/github/contributors/NimmLor/esp8266-fastled-iot-webserver" /></a> <a href="https://github.com/NimmLor/esp8266-fastled-iot-webserver/releases" alt="Downloads"><img src="https://img.shields.io/github/downloads/NimmLor/esp8266-fastled-iot-webserver/total"/></a> <a href="https://github.com/NimmLor/esp8266-fastled-iot-webserver/commits/master" alt="Downloads"><img src="https://img.shields.io/github/commits-since/NimmLor/esp8266-fastled-iot-webserver/latest?include_prereleases" /></a> <a href="https://github.com/NimmLor/esp8266-fastled-iot-webserver/releases" alt="Downloads"><img src="https://img.shields.io/github/downloads-pre/NimmLor/esp8266-fastled-iot-webserver/latest/total?color=%09%23228B22&label=download%40latest-version" /></a>
+
 
 This is a fork of [jasoncoon's esp8266 fastled webserver](https://github.com/jasoncoon/esp8266-fastled-webserver) that was adapted to control the colors of my  [LED-Projects](https://www.thingiverse.com/Surrbradl08/designs).
 
+![Webinterface](web_ui.jpg?raw=true)
 
+The web app is stored in SPIFFS (on-board flash memory) and has around 400kb. All stylsheets/js used are also stored in the spiffs, so no internet connection is required to view the webpage correctly.
 
 **New:** Windows application to sync the LED devices with music. Completely optional but it's awesome. But it's just the first prototype and very experimental. Software and docs still work in progress.
 
 https://github.com/NimmLor/IoT-Audio-Visualization-Center 
-
-
 
 Can be downloaded [here](https://github.com/NimmLor/IoT-Audio-Visualization-Center/releases).
 
@@ -47,7 +45,6 @@ All of my recent project were merged into one including most of the features. A 
 * Flexible WS2812 Matrix:				https://s.click.aliexpress.com/e/_d84R5kp
 	
 * Wemos D1 Mini:						https://s.click.aliexpress.com/e/_dTVGMGl
-	
 * 5V Power Supply:						https://s.click.aliexpress.com/e/_dY5zCWt
 	
 
@@ -56,7 +53,6 @@ All of my recent project were merged into one including most of the features. A 
 * unfortunately the "thing's" description isn't updated yet to the new standalone system
 	
 * Project link, small version:			https://www.thingiverse.com/thing:3117494
-	
 * Project link, large version:			https://www.thingiverse.com/thing:2968056
 
 **3D-Printed Desk Lamp**, a lamp that reacts to sound for your desk
@@ -68,11 +64,15 @@ All of my recent project were merged into one including most of the features. A 
 
 * Project link:													https://www.thingiverse.com/thing:3354082
 	
+
 **3D-Printed Animated RGB Logos**, a small 3D-Printed logo that lights up with style
-	
+
 * Project link, Twenty-One-Pilots Logo:		https://www.thingiverse.com/thing:3523487
-	
 * Project link, Thingiverse Logo:			https://www.thingiverse.com/thing:3531086
+
+**3D-Printed Infinity Mirror**, a DIY infinity mirror inspired by Adafruit
+
+* Project link, Sound Reactive Infinity Mirror:		https://www.thingiverse.com/thing:4461070
 
 
 
@@ -114,7 +114,7 @@ All of my recent project were merged into one including most of the features. A 
 - [WS2812B LED Strip **IP30**](https://s.click.aliexpress.com/e/_dZ1hCJ7), only IP30 will fit inside the nanoleafs, I'll recommend at least 60LEDs/m
 - 1x [3.3V to 5V Logic Level Shifter](http://s.click.aliexpress.com/e/_s49Saz) (optional, required if LEDs "glitch")
 - 1x [Female Power Jack](http://s.click.aliexpress.com/e/_sPe0RR)
-- 1x [5V Power Supply](https://s.click.aliexpress.com/e/_dY5zCWt), Note: 100 LEDs draw around 4A
+- 1x [5V Power Supply](https://s.click.aliexpress.com/e/_dY5zCWt), Note: 100 LEDs draw around 3A
 - (Optional) [Solderless LED-Connectors](https://s.click.aliexpress.com/e/_dV4rsjF)
 
 
@@ -142,25 +142,6 @@ Features
 * **Sound Reactive Mode**
 * Adjust the brightness, color and patterns
 * Play over 30+ patterns in Autoplay
-
-
-
-
-
-Web App
---------
-
-![Webinterface](https://github.com/NimmLor/esp8266-nanoleaf-webserver/blob/master/gallery/interface.jpg?raw=true)
-
-![Webinterface](web_ui.jpg?raw=true)
-
-The web app is stored in SPIFFS (on-board flash memory) and has around 400kb. All stylsheets/js used are also stored in the spiffs, so no internet connection is required to view the webpage correctly.
-
-
-
-## Circuit
-
-![circuit without Logic level converter](wiring.jpg)
 
 
 
