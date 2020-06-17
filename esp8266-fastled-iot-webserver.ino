@@ -67,7 +67,7 @@ extern "C" {
 
 #define HOSTNAME "Nanoleafs"				// Name that appears in your network, don't use whitespaces, use "-" instead
 
-#define DEVICE_TYPE 0                   // The following types are available
+#define DEVICE_TYPE 4                   // The following types are available
 /*
     0: Generic LED-Strip: a regular LED-Strip without any special arrangement (and Infinity Mirror + Bottle Lighting Pad)
         * Easiest: 5V WS2812B LED-Strip:            https://s.click.aliexpress.com/e/_dZ1hCJ7
