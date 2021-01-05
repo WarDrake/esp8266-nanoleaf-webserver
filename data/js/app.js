@@ -41,6 +41,8 @@ $(document).ready(function() {
           addColorFieldPicker(field);
         } else if (field.type == "Section") {
           addSectionField(field);
+        } else if (field.type == "Setting") {
+          handleSetting(field);
         }
       });
 
@@ -391,7 +393,41 @@ function updateFieldValue(name, value) {
     var input = group.find(".form-control");
     input.val("rgb(" + value + ")");
   }
-};
+}
+
+function handleSetting(field) {
+  console.log(field);
+
+  if (field.name == "hostname") {
+    $("#inputHostname").val(field.value);
+  }
+
+  if (field.name.includes("Support") && field.value == false) {
+    $("#" + field.name + "Entry").addClass("hidden");
+  }
+  if (field.name == "mqttSettings") {
+    $("#btnOnmqtt").attr("class", field.enabled ? "btn btn-primary" : "btn btn-default");
+    $("#btnOffmqtt").attr("class", !field.enabled ? "btn btn-primary" : "btn btn-default");
+    $("#inputMqttEnabled").val(field.enabled ? "1" : "0");
+
+    $("#btnOnmqtt").click(function() {
+      $("#btnOnmqtt").attr("class", "btn btn-primary");
+      $("#btnOffmqtt").attr("class", "btn btn-default");
+      $("#inputMqttEnabled").val("1");
+    });
+    $("#btnOffmqtt").click(function() {
+      $("#btnOnmqtt").attr("class", "btn btn-default");
+      $("#btnOffmqtt").attr("class", "btn btn-primary");
+      $("#inputMqttEnabled").val("0");
+    });
+
+    $("#inputMqttHostname").val(field.hostname);
+    $("#inputMqttPort").val(field.port);
+    $("#inputMqttUser").val(field.username);
+    $("#inputMqttTopic").val(field.topic);
+    $("#inputMqttDeviceName").val(field.devicename);
+  }
+}
 
 function setBooleanFieldValue(field, btnOn, btnOff, value) {
   field.value = value;

@@ -7,6 +7,7 @@ This document describes the necessary steps from setting up the development envi
 - **esp8266 v2.7.x required**
 - FastLED v3.2.2+ required
 - ESP8266-FS (Sketch-Data-Uploader) version **[5.0+](https://github.com/esp8266/arduino-esp8266fs-plugin/releases)**
+- WiFiManager by tzapu **required**
 - (Optional) Espalexa library for Alexa integration
 - (Optional) ArduinoOTA library and Python 2.7 for wireless firmware updating
 - (Optional) PubSubClient and ArduinoJson libraries for MQTT/Homeassistant support
@@ -44,8 +45,13 @@ The video wasn't updated for the new update, so the library versions are incorre
    Click on *Sketch >> Include Library >> Manage Libraries* and install **FastLED, version 3.3.2**
    
    ![](software_screenshots/FastLED.png?raw=true)
+   
+6. Install the **WiFiManager by Tapzu**
+   Click on *Sketch >> Include Library >> Manage Libraries* and install **WiFiManager by Tapzu**
+   
+   ![](software_screenshots/wifi-manager.jpg?raw=true)
 
-6. Install the  *ESP8266FS* **Sketch Data Upload Tool**: 
+7. Install the  *ESP8266FS* **Sketch Data Upload Tool**: 
 
    > - Download the tool: https://github.com/esp8266/arduino-esp8266fs-plugin/releases.
    >
@@ -57,21 +63,21 @@ The video wasn't updated for the new update, so the library versions are incorre
    > 
    >   // [source]( http://arduino.esp8266.com/Arduino/versions/2.3.0/doc/filesystem.html#uploading-files-to-file-system )
 
-7. *(Optional)* Install *Espalexa* for Amazon Alexa Support
+8. *(Optional)* Install *Espalexa* for Amazon Alexa Support
    Click on *Sketch >> Include Library >> Manage Libraries* and install **Espalexa, version 2.4.4**
    
    ![](software_screenshots/espalexa.png?raw=true)
 
-8. *(Optional)* Install ArduinoOTA for flashing the ESP8266 via WiFi (requires Python 2.7)
-   Click on *Sketch >> Include Library >> Manage Libraries* and install **Espalexa, version 2.4.4**
+9. *(Optional)* Install ArduinoOTA for flashing the ESP8266 via WiFi (requires Python 2.7)
+   Click on *Sketch >> Include Library >> Manage Libraries* and install **ArduinoOTA**
 
    ![](software_screenshots/ota.png?raw=true)
    
-9. (Optional) Install Python for OTA and add it to Path, afterwards restart your PC
+10. (Optional) Install Python for OTA and add it to Path, afterwards restart your PC
 
 ![](https://cdn.shopify.com/s/files/1/1509/1638/files/install_python_for_windows_customize_add_to_path.png?88791)
 
-10. *(Optional)* Install PubSubClient and ArduinoJson for MQTT/Homeassistant support
+11. *(Optional)* Install PubSubClient and ArduinoJson for MQTT/Homeassistant support
     Click on *Sketch >> Include Library >> Manage Libraries* and install PubSubClient, version **2.7.0** and ArduinoJson version **6.15.1**
 
    ![](software_screenshots/mqtt.png?raw=true)
@@ -88,30 +94,10 @@ The video wasn't updated for the new update, so the library versions are incorre
 
 2. Open the **.ino** file inside the folder in the Arduino IDE
 
-3. Create the **Secrets.h** file, if the repository was cloned
-   *Top Right Corner >> New Tab >> "Secrets.h"*
+3. **Secrets.h was replaced by WiFiManager**
 
-   ![](software_screenshots/newtab.png?raw=true)
-
-4. Paste the following code and fill in your WiFi credentials, if you need MQTT fill in the credentials too
-
-   ```c++
-   // AP mode password
-   const char WiFiAPPSK[] = "your-password";
-   
-   // Wi-Fi network to connect to (if not in AP mode)
-   char* ssid = "your-ssid";
-   char* password = "your-password";
-   
-   // only required when MQTT is enabled
-   const char* mqttUser = "YourMqttUser";
-   const char* mqttPassword = "YourMqttUserPassword";
-   ```
-
-   ![](software_screenshots/secret.png?raw=true)
-
-5. Configure the main parameters
-   In the .ino file there are many parameters to change and tweak the essential settings are:
+4. Configure the main parameters
+   In the esp8266-fastled-iot-webserver.ino file there are many parameters to change and tweak the essential settings are:
 - `LED_TYPE`: The type of LED strip that is used (WS2812B, APA102, ...)
 - `DATA_PIN`: The pin where the LED-Strip is connected
 - `CLK_PIN`:  Additional clock pin when using LED-Strips with 4 pins.
@@ -171,7 +157,7 @@ This type is used for the [twisted](https://www.thingiverse.com/thing:4129249) o
 Parameters:
 
 - `LINE_COUNT`: Amount of the LED strip lines, (with the provided cores it's 8)
-- `PIXELS_PER_LEAF`: Amount of the LEDs inside one triangle
+- `LEDS_PER_LINE`: Amount of the LEDs inside one triangle
 
 #### 2.2.4 [4] Nanoleaf Replica
 
@@ -180,7 +166,7 @@ This type is used for the [3D-Printed Nanoleafs](https://www.thingiverse.com/thi
 Parameters:
 
 - `LEAFCOUNT`: Amount of the LED strip lines, (with the provided cores it's 8)
-- `LEDS_PER_LINE`: Amount of the LEDs per strip
+- `PIXELS_PER_LEAF`: Amount of the LEDs per strip
 
 #### 2.2.5 [5] Animated RGB-Logos
 
@@ -268,12 +254,15 @@ Click on *Tools >> ESP8266 Sketch Data Upload*
 
 ### 3.3 Connecting to the esp8266
 
-1. Open the **Serial Monitor** to find the IP address of esp8266
+1. The ESP should open an access point with the hostname, connect to it
 
-- Click on *Tools >> Serial Monitor*
-- When pressing the *Reset-Button* on the esp8266, the console should print the IP-Address
+2. Open **192.168.4.1** in your browser of choice
 
-5. Connect to the UI by opening http://ip_address/ in your browser of choice, this works on mobile devices too. If mDNS was enabled, you should be able to access the UI via http://<Hostname>.local/
+3. Connect to your WiFi
+
+![ESP8266 WiFi Captive Portal Homepage](http://i.imgur.com/YPvW9eql.png) ![ESP8266 WiFi Captive Portal Configuration](http://i.imgur.com/oicWJ4gl.png)
+
+4. Connect to the UI in your selected network by opening `http://<IP-ADDRESS>/` in your browser of choice. If mDNS was enabled, you should be able to access the UI via `http://<Hostname>.local/`
 
 
 

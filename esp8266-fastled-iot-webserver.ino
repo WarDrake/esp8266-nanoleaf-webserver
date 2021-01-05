@@ -65,7 +65,7 @@ extern "C" {
 
 //#define REMOVE_VISUALIZATION          // remove the comment to completly disable all udp-based visualization patterns
 
-#define HOSTNAME "Nanoleafs"				// Name that appears in your network, don't use whitespaces, use "-" instead
+#define DEFAULT_HOSTNAME "LEDs"         // Name that appears in your network, don't use whitespaces, use "-" instead
 
 #define DEVICE_TYPE 4                   // The following types are available
 /*
@@ -112,8 +112,10 @@ extern "C" {
 #elif DEVICE_TYPE == 2              // 7-Segment Clock
     #define NTP_REFRESH_INTERVAL_SECONDS 600            // 10 minutes
     const char* ntpServerName = "at.pool.ntp.org";      // Austrian ntp-timeserver
-    int t_offset = 0;                                   // offset added to the time from the ntp server
+    int t_offset = 1;                                   // offset added to the time from the ntp server
+    bool updateColorsEverySecond = false;               // if set to false it will update colors every minute (time patterns only)
     const int NTP_PACKET_SIZE = 48;
+    bool switchedTimePattern = true;
     #define NUM_LEDS 30
     #define Digit1 0
     #define Digit2 7
@@ -141,12 +143,10 @@ extern "C" {
 //---------------------------------------------------------------------------------------------------------//
 // Feature Configuration: Enabled by removing the "//" in front of the define statements
 //---------------------------------------------------------------------------------------------------------//
-    //#define ACCESS_POINT_MODE                 // the esp8266 will create a wifi-access point instead of connecting to one, credentials must be in Secrets.h
+    #define ENABLE_OTA_SUPPORT                // requires ArduinoOTA - library, not working on esp's with 1MB memory (esp-01, Wemos D1 lite ...)
+        #define OTA_PASSWORD "passwd123"      //  password that is required to update the esp's firmware wireless
 
-    #define ENABLE_OTA_SUPPORT                  // requires ArduinoOTA - library, not working on esp's with 1MB memory (esp-01, Wemos D1 lite ...)
-        #define OTA_PASSWORD "nodeMCUota"       //  password that is required to update the esp's firmware wireless
-
-    #define ENABLE_MULTICAST_DNS                // allows to access the UI via "http://<HOSTNAME>.local/", implemented by GitHub/WarDrake
+    #define ENABLE_MULTICAST_DNS              // allows to access the UI via "http://<HOSTNAME>.local/", implemented by GitHub/WarDrake
 
     #define RANDOM_AUTOPLAY_PATTERN             // if enabled the next pattern for autoplay is choosen at random
     #define AUTOPLAY_IGNORE_UDP_PATTERNS        // remove visualization patterns from autoplay
@@ -185,13 +185,13 @@ extern "C" {
  * 
  */
 #ifdef ENABLE_ALEXA_SUPPORT
-    #define ALEXA_DEVICE_NAME           HOSTNAME
-    //#define AddAutoplayDevice             ((String)HOSTNAME + (String)" Autoplay")
-    //#define AddStrobeDevice               ((String)HOSTNAME + (String)" Strobe")
-    //#define AddSpecificPatternDeviceA     ((String)HOSTNAME + (String)" Party")
-    //#define AddSpecificPatternDeviceB     ((String)HOSTNAME + (String)" Chill")
-    //#define AddSpecificPatternDeviceC     ((String)HOSTNAME + (String)" Rainbow")
-    //#define AddAudioDevice                ((String)HOSTNAME + (String)" Audio")
+    //#define ALEXA_DEVICE_NAME           DEFAULT_HOSTNAME
+    //#define AddAutoplayDevice             ((String)DEFAULT_HOSTNAME + (String)" Autoplay")
+    //#define AddStrobeDevice               ((String)DEFAULT_HOSTNAME + (String)" Strobe")
+    //#define AddSpecificPatternDeviceA     ((String)DEFAULT_HOSTNAME + (String)" Party")
+    //#define AddSpecificPatternDeviceB     ((String)DEFAULT_HOSTNAME + (String)" Chill")
+    //#define AddSpecificPatternDeviceC     ((String)DEFAULT_HOSTNAME + (String)" Rainbow")
+    //#define AddAudioDevice                ((String)DEFAULT_HOSTNAME + (String)" Audio")
     //#define SpecificPatternA 37           // Parameter defines what pattern gets executed
     //#define SpecificPatternB 12           // Parameter defines what pattern gets executed
     //#define SpecificPatternC 0            // Parameter defines what pattern gets executed
@@ -257,8 +257,12 @@ if you have connected the ring first it should look like this: const int twpOffs
 
 /*######################## MQTT Configuration ########################*/
 #ifdef ENABLE_MQTT_SUPPORT
-    const char* mqttServer = "homeassistant.local";
-    const int mqttPort = 1883;
+    // these are deafault settings which can be changed in the web interface "settings" page
+    #define MQTT_ENABLED 0
+    #define MQTT_HOSTNAME "homeassistant.local"
+    #define MQTT_PORT 1883
+    #define MQTT_USER "MyUserName"
+    #define MQTT_PASS ""
     #if DEVICE_TYPE == 0
         #define MQTT_TOPIC "homeassistant/light/ledstrip"               // MQTT Topic to Publish to for state and config (Home Assistant)
         #define MQTT_TOPIC_SET "/set"                                   // MQTT Topic to subscribe to for changes(Home Assistant)
@@ -287,9 +291,6 @@ if you have connected the ring first it should look like this: const int twpOffs
     #define MQTT_UNIQUE_IDENTIFIER WiFi.macAddress()                    // A Unique Identifier for the device in Homeassistant (MAC Address used by default)
     #define MQTT_MAX_PACKET_SIZE 1024
     #define MQTT_MAX_TRANSFER_SIZE 1024
-    // For the user / password check the Secrets.h file and modify your settings in there.
-    // const char* mqttUser = "YourMqttUser";
-    // const char* mqttPassword = "YourMqttUserPassword";
 
     #include <PubSubClient.h>                                           // Include the MQTT Library, must be installed via the library manager
     #include <ArduinoJson.h> 
@@ -314,10 +315,11 @@ if you have connected the ring first it should look like this: const int twpOffs
     #define PACKET_LENGTH LENGTH
     #define NUM_LEDS (HEIGHT * LENGTH)
     #define PACKET_LENGTH LENGTH
+    #define BAND_GROUPING    1
 
 #elif DEVICE_TYPE == 2
     #define PACKET_LENGTH NUM_LEDS
-
+    #define BAND_GROUPING    1
     IPAddress timeServerIP;
     WiFiUDP udpTime;
 
@@ -331,12 +333,15 @@ if you have connected the ring first it should look like this: const int twpOffs
 #elif DEVICE_TYPE == 3
     #define NUM_LEDS      (LINE_COUNT * LEDS_PER_LINE)
     #define PACKET_LENGTH LEDS_PER_LINE
+    #define BAND_GROUPING    1
 
 #elif DEVICE_TYPE == 4
     #define NUM_LEDS (PIXELS_PER_LEAF * LEAFCOUNT)
     #define PACKET_LENGTH (LEAFCOUNT * 3)
+    #define BAND_GROUPING    1
 
 #elif VISUALIZER_TYPE == 5
+    #define BAND_GROUPING    1
     #ifdef TWENTYONEPILOTS
         #define NUM_LEDS      (RING_LENGTH+DOT_LENGTH+DOUBLE_STRIP_LENGTH+ITALIC_STRIP_LENGTH)
     #endif
@@ -352,9 +357,12 @@ if you have connected the ring first it should look like this: const int twpOffs
     #endif
 #endif
 
+    #include <WiFiManager.h> // https://github.com/tzapu/WiFiManager/tree/development
+    WiFiManager wifiManager;
+
 // Misc Params
 #define AVG_ARRAY_SIZE 10
-#define BAND_START 1
+#define BAND_START 0
 #define BAND_END 3        // can be increased when working with bigger spectrums (40+)
 #define UDP_PORT 4210
 
@@ -363,26 +371,42 @@ if you have connected the ring first it should look like this: const int twpOffs
     uint8_t incomingPacket[PACKET_LENGTH + 1];
 #endif
 
+// define EEPROM settings
+//  https://www.kriwanek.de/index.php/de/homeautomation/esp8266/364-eeprom-für-parameter-verwenden
+
+typedef struct {
+  uint8_t brightness;
+  uint8_t currentPatternIndex;
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+  uint8_t power;
+  uint8_t autoplay;
+  uint8_t autoplayDuration;
+  uint8_t currentPaletteIndex;
+  uint8_t speed;
+  char hostname[33];
+  uint8_t MQTTEnabled;
+  char MQTTHost[65];
+  uint16_t MQTTPort;
+  char MQTTUser[33];
+  char MQTTPass[65];
+  char MQTTTopic[65];
+  char MQTTDeviceName[33];
+} configData_t;
+
+configData_t cfg;
+configData_t default_cfg;
+
+// set to true if config has changed
+bool save_config = false;
+
 ESP8266WebServer webServer(80);
 
 #include "FSBrowser.h"
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 #define FRAMES_PER_SECOND  120  // here you can control the speed. With the Access Point / Web Server the animations run a bit slower.
 #define SOUND_REACTIVE_FPS FRAMES_PER_SECOND
-
-
-#include "Secrets.h" // this file is intentionally not included in the sketch, so nobody accidentally commits their secret information.
-// create a Secrets.h file with the following:
-// AP mode password
-// const char WiFiAPPSK[] = "your-password";
-
-// Wi-Fi network to connect to (if not in AP mode)
-// char* ssid = "your-ssid";
-// char* password = "your-password";
-
-// MQTT user and password for your broker (if MQTT is enabled)
-// const char* mqttUser = "your-mqtt-user";
-// const char* mqttPassword = "your-mqtt-password";
 
 #ifdef ENABLE_OTA_SUPPORT
 #include <ArduinoOTA.h>
@@ -405,7 +429,7 @@ CRGB leds[NUM_LEDS];
 
 const uint8_t brightnessCount = 5;
 uint8_t brightnessMap[brightnessCount] = { 5, 32, 64, 128, 255 };
-uint8_t brightnessIndex = 0;
+uint8_t brightnessIndex = 3;
 
 // ten seconds per color palette makes a good demo
 // 20-120 is better for deployment
@@ -446,6 +470,8 @@ unsigned long autoPlayTimeout = 0;
 uint8_t currentPaletteIndex = 0;
 
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
+uint8_t slowHue = 0; // slower gHue
+uint8_t verySlowHue = 0; // very slow gHue
 
 CRGB solidColor = CRGB::Blue;
 
@@ -475,6 +501,9 @@ PatternAndNameList patterns = {
     // Time patterns
   #if DEVICE_TYPE == 2                
     { displayTimeStatic,      "Time" },
+    { displayTimeColorful,     "Time Colorful" },
+    { displayTimeGradient,     "Time Gradient" },
+    { displayTimeGradientLarge,     "Time Gradient large" },
     { displayTimeRainbow,     "Time Rainbow" },
   #endif
 
@@ -562,6 +591,9 @@ PatternAndNameList patterns = {
     { SolidColorComplementary,            "Solid-Color Complementary Bullet Visualizer"},
     { BluePurpleBullets,                "Blue/Purple Bullet Visualizer"},
     { BulletVisualizer,                    "Beat-Bullet Visualization"},
+    //{ RainbowPeaks,                     "Rainbow Peak Visualizer"},               // broken
+    { RainbowBassRings,                "Bass Ring Visualizer"},
+    { RainbowKickRings,                "Kick Ring Visualizer"},
     //{ TrailingBulletsVisualizer,        "Trailing Bullet Visualization"},        // obsolete
     //{ BrightnessVisualizer,                "Brightness Visualizer"},            // broken
     { RainbowBandVisualizer,            "Rainbow Band Visualizer"},
@@ -623,21 +655,21 @@ const String paletteNames[paletteCount] = {
 
 
 
-void setSolidColor(uint8_t r, uint8_t g, uint8_t b, bool updatePattern = true)
+void setSolidColor(uint8_t r, uint8_t g, uint8_t b, bool updatePattern)
 {
     solidColor = CRGB(r, g, b);
 
-    EEPROM.write(2, r);
-    EEPROM.write(3, g);
-    EEPROM.write(4, b);
-    EEPROM.commit();
+    cfg.red = r;
+    cfg.green = g;
+    cfg.blue = b;
+    save_config = true;
 
     if (updatePattern && currentPatternIndex != patternCount - 2)setPattern(patternCount - 1);
 
     broadcastString("color", String(solidColor.r) + "," + String(solidColor.g) + "," + String(solidColor.b));
 }
 
-void setSolidColor(CRGB color, bool updatePattern = true)
+void setSolidColor(CRGB color, bool updatePattern)
 {
     setSolidColor(color.r, color.g, color.b, updatePattern);
 }
@@ -662,7 +694,7 @@ void handleReboot2()
 }
 #endif // ENABLE_ALEXA_SUPPORT
 
-void addRebootPage(int webServerNr = 0)
+void addRebootPage(int webServerNr)
 {
     if (webServerNr < 2)
     {
@@ -676,7 +708,40 @@ void addRebootPage(int webServerNr = 0)
     #endif // ENABLE_ALEXA_SUPPORT
 }
 
+// we can't assing wifiManager.resetSettings(); to reset, somewhow it gets called straight away.
+void setWiFiConf(String ssid, String password)
+{
+#ifdef ESP8266
+    struct station_config conf;
 
+    wifi_station_get_config(&conf);
+
+    memset(conf.ssid, 0, sizeof(conf.ssid));
+    for (int i = 0; i < ssid.length() && i < sizeof(conf.ssid); i++)
+        conf.ssid[i] = ssid.charAt(i);
+
+    memset(conf.password, 0, sizeof(conf.password));
+    for (int i = 0; i < password.length() && i < sizeof(conf.password); i++)
+        conf.password[i] = password.charAt(i);
+
+    wifi_station_set_config(&conf);
+
+// untested due to lack of ESP32
+#elif defined(ESP32)
+    if(WiFiGenericClass::getMode() != WIFI_MODE_NULL){
+
+          wifi_config_t conf;
+          esp_wifi_get_config(WIFI_IF_STA, &conf);
+
+          memset(conf.sta.ssid, 0, sizeof(conf.sta.ssid));
+          ssid.toCharArray(conf.sta.ssid, sizeof(conf.sta.ssid));
+          memset(conf.sta.password, 0, sizeof(conf.sta.password));
+          password.toCharArray(conf.sta.password, sizeof(conf.sta.password));
+
+          esp_wifi_set_config(WIFI_IF_STA, &conf);
+    }
+#endif
+}
 void setup() {
     WiFi.setSleepMode(WIFI_NONE_SLEEP);
     Serial.begin(115200);
@@ -699,8 +764,16 @@ void setup() {
     fill_solid(leds, NUM_LEDS, CRGB::Black);
     FastLED.show();
 
-    EEPROM.begin(4095);
-    loadSettings();
+    // set a default config to be used on config reset
+    default_cfg.brightness = brightness;
+    default_cfg.currentPatternIndex = currentPatternIndex;
+    default_cfg.power = power;
+    default_cfg.autoplay = autoplay;
+    default_cfg.autoplayDuration = autoplayDuration;
+    default_cfg.currentPaletteIndex = currentPaletteIndex;
+    default_cfg.speed = speed;
+
+    loadConfig();
 
     FastLED.setBrightness(brightness);
 
@@ -737,33 +810,28 @@ void setup() {
         Serial.printf("\n");
     }
 
-#ifdef ACCESS_POINT_MODE
-    WiFi.mode(WIFI_AP);
-    // Do a little work to get a unique-ish name. Append the
-    // last two bytes of the MAC (HEX'd) to "Thing-":
     uint8_t mac[WL_MAC_ADDR_LENGTH];
     WiFi.softAPmacAddress(mac);
     String macID = String(mac[WL_MAC_ADDR_LENGTH - 2], HEX) +
         String(mac[WL_MAC_ADDR_LENGTH - 1], HEX);
     macID.toUpperCase();
-    String AP_NameString = "ESP8266 Thing " + macID;
-    char AP_NameChar[AP_NameString.length() + 1];
-    memset(AP_NameChar, 0, AP_NameString.length() + 1);
-    for (int i = 0; i < AP_NameString.length(); i++)
-        AP_NameChar[i] = AP_NameString.charAt(i);
-    WiFi.softAP(AP_NameChar, WiFiAPPSK);
-    Serial.printf("Connect to Wi-Fi access point: %s\n", AP_NameChar);
-    Serial.println("and open http://192.168.4.1 in your browser");
-#else
-    WiFi.mode(WIFI_STA);
-    Serial.printf("Connecting to %s\n", ssid);
-    if (String(WiFi.SSID()) != String(ssid)) {
-        WiFi.hostname(HOSTNAME);
-        WiFi.begin(ssid, password);        
-    }
-#endif
 
-    initUdp(UDP_PORT);
+    String nameString = String(cfg.hostname) + String(" - ") + macID;
+
+    char nameChar[nameString.length() + 1];
+    nameString.toCharArray(nameChar, sizeof(nameChar));
+
+    wifiManager.setHostname(cfg.hostname);
+    wifiManager.setConfigPortalBlocking(false);
+    wifiManager.setSaveConfigCallback(handleReboot);
+
+    //automatically connect using saved credentials if they exist
+    //If connection fails it starts an access point with the specified name
+    if (wifiManager.autoConnect(nameChar)) {
+        Serial.println("Wi-Fi connected");
+    } else {
+        Serial.println("Wi-Fi manager portal running");
+    }
 
 #ifdef ENABLE_OTA_SUPPORT
 
@@ -789,7 +857,7 @@ void setup() {
         //delay(500);
         //webServer.close();
         //delay(500);
-        ArduinoOTA.setHostname(HOSTNAME);
+        ArduinoOTA.setHostname(cfg.hostname);
 #ifdef OTA_PASSWORD
         ArduinoOTA.setPassword(OTA_PASSWORD);
 #endif
@@ -848,7 +916,7 @@ void setup() {
 #ifdef ALEXA_DEVICE_NAME
     alexa_main = new EspalexaDevice(ALEXA_DEVICE_NAME, mainAlexaEvent, EspalexaDeviceType::color);
 #else
-    alexa_main = new EspalexaDevice(HOSTNAME, mainAlexaEvent, EspalexaDeviceType::color);
+    alexa_main = new EspalexaDevice(cfg.hostname, mainAlexaEvent, EspalexaDeviceType::color);
 #endif
     espalexa.addDevice(alexa_main);
 #ifdef AddAutoplayDevice
@@ -878,7 +946,7 @@ void setup() {
         }
         });
 
-    addRebootPage();
+    addRebootPage(0);
 
     webServer.on("/alexa", HTTP_GET, []() {
         IPAddress ip = WiFi.localIP();
@@ -918,6 +986,8 @@ void setup() {
             delay(1);
         }
         });
+#else
+    addRebootPage(0);
 #endif
 
     webServer.on("/all", HTTP_GET, []() {
@@ -925,11 +995,139 @@ void setup() {
         json += ",{\"name\":\"lines\",\"label\":\"Amount of Lines for the Visualizer\",\"type\":\"String\",\"value\":";
         json += PACKET_LENGTH;
         json += "}";
-        json += ",{\"name\":\"hostname\",\"label\":\"Name of the device\",\"type\":\"String\",\"value\":\"";
-        json += HOSTNAME;
+        json += ",{\"name\":\"hostname\",\"label\":\"Name of the device\",\"type\":\"Setting\",\"value\":\"";
+        json += cfg.hostname;
         json += "\"}";
+        json += ",{\"name\":\"otaSupport\",\"label\":\"Device supports OTA\",\"type\":\"Setting\",\"value\":";
+#ifdef ENABLE_OTA_SUPPORT
+        json += "true";
+#else
+        json += "false";
+#endif
+        json += "}";
+        json += ",{\"name\":\"alexaSupport\",\"label\":\"Device supports Alexa\",\"type\":\"Setting\",\"value\":";
+#ifdef ENABLE_ALEXA_SUPPORT
+        json += "true";
+#else
+        json += "false";
+#endif
+        json += "}";
+        json += ",{\"name\":\"mqttSupport\",\"label\":\"Device supports MQTT\",\"type\":\"Setting\",\"value\":";
+#ifdef ENABLE_MQTT_SUPPORT
+        json += "true";
+#else
+        json += "false";
+#endif
+        json += "}";
+#ifdef ENABLE_MQTT_SUPPORT
+        json += ",{\"name\":\"mqttSettings\",\"label\":\"MQTT Settings\",\"type\":\"Setting\",\"enabled\":";
+        json += cfg.MQTTEnabled;
+        json += ",\"hostname\":\"";
+        json += cfg.MQTTHost;
+        json += "\",\"port\":";
+        json += cfg.MQTTPort;
+        json += ",\"username\":\"";
+        json += cfg.MQTTUser;
+        json += "\",\"topic\":\"";
+        json += cfg.MQTTTopic;
+        json += "\",\"devicename\":\"";
+        json += cfg.MQTTDeviceName;
+        json += "\"}";
+#endif
         json += "]";
         webServer.send(200, "text/json", json);
+        });
+
+    webServer.on("/settings", HTTP_POST, []() {
+
+        bool force_restart = false;
+
+        String ssid = webServer.arg("ssid");
+        String password = webServer.arg("password");
+
+        if (ssid.length() != 0 && password.length() != 0) {
+            setWiFiConf(ssid, password);
+            force_restart = true;
+        }
+
+        String new_hostname = webServer.arg("hostname");
+
+        if (new_hostname.length() != 0 && String(cfg.hostname) != new_hostname) {
+          setHostname(new_hostname);
+          force_restart = true;
+        }
+
+#ifdef ENABLE_MQTT_SUPPORT
+        uint8_t mqtt_enabled = uint8_t(webServer.arg("mqtt-enabled").toInt());
+        String mqtt_hostname = webServer.arg("mqtt-hostname");
+        uint16_t mqtt_port = uint16_t(webServer.arg("mqtt-port").toInt());
+        String mqtt_username = webServer.arg("mqtt-user");
+        String mqtt_password = webServer.arg("mqtt-password");
+        String mqtt_topic = webServer.arg("mqtt-topic");
+        String mqtt_device_name = webServer.arg("mqtt-device-name");
+
+        if (cfg.MQTTEnabled != mqtt_enabled) {
+            cfg.MQTTEnabled = mqtt_enabled;
+            save_config = true;
+        }
+        if (cfg.MQTTPort != mqtt_port) {
+            cfg.MQTTPort = mqtt_port;
+            force_restart = true;
+        }
+        if (mqtt_hostname.length() > 0 && String(cfg.MQTTHost) != mqtt_hostname) {
+            mqtt_hostname.toCharArray(cfg.MQTTHost, sizeof(cfg.MQTTHost));
+            force_restart = true;
+        }
+        if (mqtt_username.length() > 0 && String(cfg.MQTTUser) != mqtt_username) {
+            mqtt_username.toCharArray(cfg.MQTTUser, sizeof(cfg.MQTTUser));
+            force_restart = true;
+        }
+        if (mqtt_password.length() > 0 && String(cfg.MQTTPass) != mqtt_password) {
+            mqtt_password.toCharArray(cfg.MQTTPass, sizeof(cfg.MQTTPass));
+            force_restart = true;
+        }
+        if (mqtt_topic.length() > 0 && String(cfg.MQTTTopic) != mqtt_topic) {
+            mqtt_topic.toCharArray(cfg.MQTTTopic, sizeof(cfg.MQTTTopic));
+            force_restart = true;
+        }
+        if (mqtt_device_name.length() > 0 && String(cfg.MQTTDeviceName) != mqtt_device_name) {
+            mqtt_device_name.toCharArray(cfg.MQTTDeviceName, sizeof(cfg.MQTTDeviceName));
+            force_restart = true;
+        }
+#endif
+        if (force_restart) {
+          saveConfig(true);
+          handleReboot();
+        } else {
+          webServer.send(200, "text/html", "<html><head><meta http-equiv=\"refresh\" content=\"0; url=/settings.htm\"/></head><body></body>");
+        }
+        });
+
+    webServer.on("/reset", HTTP_POST, []() {
+
+        // delete EEPROM settings
+        if (webServer.arg("type") == String("all")) {
+            // delete EEPROM config
+            EEPROM.begin(4095);
+            for (int i = 0 ; i < sizeof(cfg) ; i++) {
+                EEPROM.write(i, 0);
+            }
+            delay(200);
+            EEPROM.commit();
+            EEPROM.end();
+
+            // set to default config
+            cfg = default_cfg;
+            saveConfig(true);
+        }
+
+        // delete wireless config
+        if (webServer.arg("type") == String("wifi") || webServer.arg("type") == String("all")) {
+            setWiFiConf(String(""), String(""));
+        }
+        webServer.send(200, "text/html", "<html><head></head><body><font face='arial'><b><h2>Config reset finished. Device is rebooting now and you need to connect to the wireless again.</h2></b></font></body></html>");
+        delay(500);
+        ESP.restart();
         });
 
     webServer.on("/fieldValue", HTTP_GET, []() {
@@ -1002,6 +1200,9 @@ void setup() {
 
     webServer.on("/pattern", HTTP_POST, []() {
         String value = webServer.arg("value");
+        #if DEVICE_TYPE == 2
+        switchedTimePattern = true;
+        #endif
         setPattern(value.toInt());
         sendInt(currentPatternIndex);
         });
@@ -1074,6 +1275,13 @@ void setup() {
 
     Serial.println("HTTP web server started");
 
+#if DEVICE_TYPE == 2
+    bool sucess = false;
+    while (!sucess) {
+        sucess = GetTime();
+        if (!sucess) delay(300);
+    }
+#endif
     //  webSocketsServer.begin();
     //  webSocketsServer.onEvent(webSocketEvent);
     //  Serial.println("Web socket server started");
@@ -1095,7 +1303,8 @@ void broadcastInt(String name, uint8_t value)
     String json = "{\"name\":\"" + name + "\",\"value\":" + String(value) + "}";
     //  webSocketsServer.broadcastTXT(json);
     #ifdef ENABLE_MQTT_SUPPORT
-        sendStatus();
+        if (cfg.MQTTEnabled == 1)
+            sendStatus();
     #endif
 }
 
@@ -1104,7 +1313,8 @@ void broadcastString(String name, String value)
     String json = "{\"name\":\"" + name + "\",\"value\":\"" + String(value) + "\"}";
     //  webSocketsServer.broadcastTXT(json);
     #ifdef ENABLE_MQTT_SUPPORT
-        sendStatus();
+        if (cfg.MQTTEnabled == 1)
+            sendStatus();
     #endif
 }
 
@@ -1122,15 +1332,12 @@ void loop() {
 #ifdef ENABLE_MULTICAST_DNS
     MDNS.update();
 #endif // ENABLE_MULTICAST_DNS
-#ifdef ENABLE_MQTT_SUPPORT
-    mqttClient.loop();
-#endif
 
-    //  handleIrInput();
+    wifiManager.process();
 
     static bool hasConnected = false;
     EVERY_N_SECONDS(1) {
-        if (WiFi.status() != WL_CONNECTED) {
+        if (wifiManager.getLastConxResult() != WL_CONNECTED) {
             //      Serial.printf("Connecting to %s\n", ssid);
             hasConnected = false;
         }
@@ -1140,11 +1347,10 @@ void loop() {
             Serial.print(WiFi.localIP());
             Serial.println(" in your browser");
 #ifdef ENABLE_MULTICAST_DNS
-            if (!MDNS.begin(HOSTNAME)) {
-                Serial.println("\nError setting up MDNS responder! \n");
-            }
-            else {
-                Serial.println("\nmDNS responder started \n");
+            if (!MDNS.begin(cfg.hostname)) {
+                Serial.println("\nError while setting up MDNS responder! \n");
+            } else {
+                Serial.println("mDNS responder started");
                 MDNS.addService("http", "tcp", 80);
             }
 #endif
@@ -1153,16 +1359,22 @@ void loop() {
 
 #ifdef ENABLE_MQTT_SUPPORT
     static bool mqttConnected = false;
+
+    if (cfg.MQTTEnabled == 1)
+        mqttClient.loop();
+    else
+        mqttConnected = false;
+
     EVERY_N_SECONDS(10) {
-        if (!mqttClient.connected()) {
-            mqttClient.setServer(mqttServer, mqttPort);
+        if (!mqttClient.connected() && cfg.MQTTEnabled != 0) {
+            mqttClient.setServer(cfg.MQTTHost, cfg.MQTTPort);
             mqttClient.setCallback(mqttCallback);
             mqttConnected = false;
         }
-        if (!mqttConnected) {
+        if (!mqttConnected && cfg.MQTTEnabled != 0) {
             mqttConnected = true;
             Serial.println("Connecting to MQTT...");
-            if (mqttClient.connect(HOSTNAME, mqttUser, mqttPassword)) {
+            if (mqttClient.connect(cfg.hostname, cfg.MQTTUser, cfg.MQTTPass)) {
                 mqttClient.setKeepAlive(10);
                 Serial.println("connected \n");
 
@@ -1170,12 +1382,12 @@ void loop() {
                 mqttClient.subscribe(MQTT_TOPIC MQTT_TOPIC_SET);
 
                 DynamicJsonDocument JSONencoder(4096);
-                JSONencoder["~"] = MQTT_TOPIC,
-                    JSONencoder["name"] = MQTT_DEVICE_NAME,
+                    JSONencoder["~"] = cfg.MQTTTopic,
+                    JSONencoder["name"] = cfg.MQTTDeviceName,
                     JSONencoder["dev"]["ids"] = MQTT_UNIQUE_IDENTIFIER,
                     JSONencoder["dev"]["mf"] = "Surrbradl08",
                     JSONencoder["dev"]["mdl"] = "0.4.4",
-                    JSONencoder["dev"]["name"] = MQTT_DEVICE_NAME,
+                    JSONencoder["dev"]["name"] = cfg.MQTTDeviceName,
                     JSONencoder["stat_t"] = "~",
                     JSONencoder["cmd_t"] = "~" MQTT_TOPIC_SET,
                     JSONencoder["brightness"] = true,
@@ -1237,6 +1449,8 @@ void loop() {
         // slowly blend the current palette to the next
         nblendPaletteTowardPalette(gCurrentPalette, gTargetPalette, 8);
         gHue++;  // slowly cycle the "base color" through the rainbow
+        if (gHue % 16 == 0)slowHue++;
+        if (gHue % 127 == 0)verySlowHue++;
     }
 
     if (autoplay && (millis() > autoPlayTimeout)) {
@@ -1250,22 +1464,46 @@ void loop() {
     FastLED.show();
 
     // insert a delay to keep the framerate modest
-    FastLED.delay(1000 / FRAMES_PER_SECOND);
+    //FastLED.delay(1000 / FRAMES_PER_SECOND);
+    delay(1000 / FRAMES_PER_SECOND);
+
+    // save config changes only every 10 seconds
+    EVERY_N_SECONDS(10) {
+        saveConfig(save_config);
+    }
 }
 
-void loadSettings()
-{
-    brightness = EEPROM.read(0);
+void saveConfig(bool save) {
+    // Save configuration from RAM into EEPROM
+    if (save == true) {
+        EEPROM.begin(4095);
+        EEPROM.put(0, cfg );
+        delay(200);
+        EEPROM.commit();
+        EEPROM.end();
 
-    currentPatternIndex = EEPROM.read(1);
+        save_config = false;
+    }
+}
+
+void loadConfig()
+{
+    // Loads configuration from EEPROM into RAM
+    EEPROM.begin(4095);
+    EEPROM.get(0, cfg );
+    EEPROM.end();
+
+    brightness = cfg.brightness;
+
+    currentPatternIndex = cfg.currentPatternIndex;
     if (currentPatternIndex < 0)
         currentPatternIndex = 0;
     else if (currentPatternIndex >= patternCount)
         currentPatternIndex = patternCount - 1;
 
-    byte r = EEPROM.read(2);
-    byte g = EEPROM.read(3);
-    byte b = EEPROM.read(4);
+    byte r = cfg.red;
+    byte g = cfg.green;
+    byte b = cfg.blue;
 
     if (r == 0 && g == 0 && b == 0)
     {
@@ -1275,25 +1513,65 @@ void loadSettings()
         solidColor = CRGB(r, g, b);
     }
 
-    power = EEPROM.read(5);
+    power = cfg.power;
 
-    autoplay = EEPROM.read(6);
-    autoplayDuration = EEPROM.read(7);
+    autoplay = cfg.autoplay;
+    autoplayDuration = cfg.autoplayDuration;
 
-    currentPaletteIndex = EEPROM.read(8);
+    currentPaletteIndex = cfg.currentPaletteIndex;
     if (currentPaletteIndex < 0)
         currentPaletteIndex = 0;
     else if (currentPaletteIndex >= paletteCount)
         currentPaletteIndex = paletteCount - 1;
-    speed = EEPROM.read(9);
+
+    speed = cfg.speed;
+
+    if (!isValidHostname(cfg.hostname, sizeof(cfg.hostname))) {
+        strncpy(cfg.hostname, DEFAULT_HOSTNAME, sizeof(cfg.hostname));
+        save_config = true;
+    }
+
+#ifdef ENABLE_MQTT_SUPPORT
+    // fall back to default settings if hostname is invalid
+    if (!isValidHostname(cfg.MQTTHost, sizeof(cfg.MQTTHost))) {
+        cfg.MQTTEnabled = MQTT_ENABLED;
+        strncpy(cfg.MQTTHost, MQTT_HOSTNAME, sizeof(cfg.MQTTHost));
+        cfg.MQTTPort = uint16_t(MQTT_PORT);
+        strncpy(cfg.MQTTUser, MQTT_USER, sizeof(cfg.MQTTUser));
+        strncpy(cfg.MQTTPass, MQTT_PASS, sizeof(cfg.MQTTPass));
+        strncpy(cfg.MQTTTopic, MQTT_TOPIC, sizeof(cfg.MQTTTopic));
+        strncpy(cfg.MQTTDeviceName, MQTT_DEVICE_NAME, sizeof(cfg.MQTTDeviceName));
+        save_config = true;
+    }
+#endif
+}
+
+bool isValidHostname(char *hostname_to_check, long size)
+{
+    for (int i = 0; i < size; i++) {
+        if (hostname_to_check[i] == '-' || hostname_to_check[i] == '.')
+          continue;
+        else if (hostname_to_check[i] >= '0' && hostname_to_check[i] <= '9')
+          continue;
+        else if (hostname_to_check[i] >= 'A' && hostname_to_check[i] <= 'Z')
+          continue;
+        else if (hostname_to_check[i] >= 'a' && hostname_to_check[i] <= 'z')
+          continue;
+        else if (hostname_to_check[i] == 0 && i>0)
+          break;
+
+        return false;
+    }
+
+    return true;
 }
 
 void setPower(uint8_t value)
 {
     power = value == 0 ? 0 : 1;
 
-    EEPROM.write(5, power);
-    EEPROM.commit();
+    cfg.power = power;
+    save_config = true;
 
     broadcastInt("power", power);
 }
@@ -1302,8 +1580,8 @@ void setAutoplay(uint8_t value)
 {
     autoplay = value == 0 ? 0 : 1;
 
-    EEPROM.write(6, autoplay);
-    EEPROM.commit();
+    cfg.autoplay = autoplay;
+    save_config = true;
 
     broadcastInt("autoplay", autoplay);
 }
@@ -1312,8 +1590,8 @@ void setAutoplayDuration(uint8_t value)
 {
     autoplayDuration = value;
 
-    EEPROM.write(7, autoplayDuration);
-    EEPROM.commit();
+    cfg.autoplayDuration = autoplayDuration;
+    save_config = true;
 
     autoPlayTimeout = millis() + (autoplayDuration * 1000);
 
@@ -1355,8 +1633,8 @@ void adjustPattern(bool up)
         currentPatternIndex = 0;
 
     if (autoplay == 0) {
-        EEPROM.write(1, currentPatternIndex);
-        EEPROM.commit();
+        cfg.currentPatternIndex = currentPatternIndex;
+        save_config = true;
     }
 
 #ifdef AUTOPLAY_IGNORE_UDP_PATTERNS
@@ -1378,8 +1656,8 @@ void setPattern(uint8_t value)
     currentPatternIndex = value;
 
     if (autoplay != 1) {
-        EEPROM.write(1, currentPatternIndex);
-        EEPROM.commit();
+        cfg.currentPatternIndex = currentPatternIndex;
+        save_config = true;
     }
 
     broadcastInt("pattern", currentPatternIndex);
@@ -1403,8 +1681,8 @@ void setPalette(uint8_t value)
 
     currentPaletteIndex = value;
 
-    EEPROM.write(8, currentPaletteIndex);
-    EEPROM.commit();
+    cfg.currentPaletteIndex = currentPaletteIndex;
+    save_config = true;
 
     broadcastInt("palette", currentPaletteIndex);
 }
@@ -1426,14 +1704,7 @@ void adjustBrightness(bool up)
     else if (!up && brightnessIndex > 0)
         brightnessIndex--;
 
-    brightness = brightnessMap[brightnessIndex];
-
-    FastLED.setBrightness(brightness);
-
-    EEPROM.write(0, brightness);
-    EEPROM.commit();
-
-    broadcastInt("brightness", brightness);
+    setBrightness(brightnessMap[brightnessIndex]);
 }
 
 void setBrightness(uint8_t value)
@@ -1446,8 +1717,8 @@ void setBrightness(uint8_t value)
 
     FastLED.setBrightness(brightness);
 
-    EEPROM.write(0, brightness);
-    EEPROM.commit();
+    cfg.brightness = brightness;
+    save_config = true;
 
     broadcastInt("brightness", brightness);
 }
@@ -1460,12 +1731,27 @@ void setSpeed(uint8_t value)
 
     speed = value;
 
-    FastLED.setBrightness(brightness);
+    cfg.speed = speed;
+    save_config = true;
 
-    EEPROM.write(9, speed);
-    EEPROM.commit();
+    broadcastInt("speed", speed);
+}
 
-    broadcastInt("speed", brightness);
+void setHostname(String new_hostname)
+{
+    int j = 0;
+    for (int i = 0; i < new_hostname.length() && i < sizeof(cfg.hostname); i++) {
+        if (new_hostname.charAt(i) == '-' or \
+           (new_hostname.charAt(i) >= '0' && new_hostname.charAt(i) <= '9') or \
+           (new_hostname.charAt(i) >= 'A' && new_hostname.charAt(i) <= 'Z') or \
+           (new_hostname.charAt(i) >= 'a' && new_hostname.charAt(i) <= 'z')) {
+
+            cfg.hostname[j] = new_hostname.charAt(i);
+            j++;
+        }
+    }
+    cfg.hostname[j] = '\0';
+    save_config = true;
 }
 
 void strandTest()
@@ -1576,7 +1862,7 @@ void sinelon()
 {
     // a colored dot sweeping back and forth, with fading trails
     fadeToBlackBy(leds, NUM_LEDS, 20);
-    int pos = beatsin16(speed, 0, NUM_LEDS);
+    int pos = beatsin16(speed / 4, 0, NUM_LEDS);
     static int prevpos = 0;
     CRGB color = ColorFromPalette(palettes[currentPaletteIndex], gHue, 255);
     if (pos < prevpos) {
@@ -1771,8 +2057,8 @@ void addGlitter(uint8_t chanceOfGlitter)
 extern const TProgmemRGBGradientPalettePtr gGradientPalettes[];
 extern const uint8_t gGradientPaletteCount;
 
-uint8_t beatsaw8(accum88 beats_per_minute, uint8_t lowest = 0, uint8_t highest = 255,
-    uint32_t timebase = 0, uint8_t phase_offset = 0)
+uint8_t beatsaw8(accum88 beats_per_minute, uint8_t lowest, uint8_t highest,
+    uint32_t timebase, uint8_t phase_offset)
 {
     uint8_t beat = beat8(beats_per_minute, timebase);
     uint8_t beatsaw = beat + phase_offset;
@@ -1957,12 +2243,12 @@ void rainbowChase()
 void randomDots() // Similar to randomFades(), colors flash on/off quickly
 {
     uint16_t pos;
-    do
+    pos = random16(0, (NUM_LEDS - 1));
+    if (CRGB(0, 0, 0) == CRGB(leds[pos]))
     {
-        pos = random16(0, (NUM_LEDS - 1));
-    } while (CRGB(0, 0, 0) != CRGB(leds[pos]));
+        leds[pos] = CHSV((random8() % 256), 200, 255);
+    }
     fadeToBlackBy(leds, NUM_LEDS, 64);
-    leds[pos] = CHSV((random8() % 256), 200, 255);
 }
 
 // Same as randomPaletteFades() but with completely random colors
@@ -2001,6 +2287,7 @@ void glitter()
     {
         leds[random16(0, (NUM_LEDS - 1))] = CRGB::White;
     }
+    FastLED.delay(255 - speed);
 }
 
 // Twinkling random dim white LEDs mixed with glitter() above
@@ -2299,6 +2586,17 @@ unsigned long sendNTPpacket(IPAddress& address)
     udpTime.endPacket();
 }
 
+void PrintTime() {
+    if (hours < 10)Serial.print("0");
+    Serial.print(hours);
+    Serial.print(':');
+    if (mins < 10)Serial.print("0");
+    Serial.print(mins);
+    Serial.print(':');
+    if (secs < 10)Serial.print("0");
+    Serial.println(secs);
+}
+
 
 bool GetTime()
 {
@@ -2331,33 +2629,38 @@ bool GetTime()
         mins = (epoch % 3600) / 60;
         secs = (epoch % 60);
 
-        if (hours < 10)Serial.print("0");
-        Serial.print(hours);
-        Serial.print(':');
-        if (mins < 10)Serial.print("0");
-        Serial.println(mins);
-        Serial.print(':');
-        if (secs < 10)Serial.print("0");
-        Serial.println(secs);
+        Serial.println("Requesting time");
+
+        PrintTime();
         return true;
     }
 }
 
 bool shouldUpdateNTP()
 {
-    if ((millis() - ntp_timestamp) > (NTP_REFRESH_INTERVAL_SECONDS * 1000) || (millis() - update_timestamp) >= 2000)return true;
+    if (switchedTimePattern || (millis() - ntp_timestamp) > (NTP_REFRESH_INTERVAL_SECONDS * 1000)) {
+        switchedTimePattern = false;
+        return true;
+    }
     return false;
 }
 
 bool shouldUpdateTime()
 {
-    if ((millis() - update_timestamp) > (1000-last_diff))return true;
+    if ((millis() - update_timestamp) > (1000))return true;
     return false;
 }
 
-void DrawDots(int r, int g, int b)
+void DrawDots(int r, int g, int b, int hueMode)
 {
-    for (int i = 2*Digit2; i < Digit2; i++) leds[i] = CRGB(r, g, b);
+    for (int i = 2 * Digit2; i < Digit3; i++) {
+        if (hueMode != 0) {
+            int hue = map(i, 0, NUM_LEDS, 0, (int)((double)255 / (double)hueMode)) + verySlowHue;
+            if (hue >= 255) hue -= 255;
+            leds[i] = CHSV(hue, 255,255);
+        }
+        else leds[i] = CRGB(r, g, b);
+    }
 }
 
 void displayTime(CRGB x = CRGB(0, 0, 0))
@@ -2366,20 +2669,20 @@ void displayTime(CRGB x = CRGB(0, 0, 0))
     if (x.r == 0 && x.g == 0 && x.b == 0)
     {
         hsv2rgb_rainbow(CHSV(gHue, 255, 255), c);
-        DrawTime(c.r, c.g, c.b);
-        DrawDots(c.r, c.g, c.b);
+        DrawTime(c.r, c.g, c.b, 0);
+        DrawDots(c.r, c.g, c.b, 0);
     }
     else
     {
-        DrawTime(x.r, x.g, x.b);
-        DrawDots(x.r, x.g, x.b);
+        DrawTime(x.r, x.g, x.b, 0);
+        DrawDots(x.r, x.g, x.b, 0);
     }
 }
 
 void displayTimeStatic()
 {
     bool fresh_update = false;
-    if (shouldUpdateNTP)
+    if (shouldUpdateNTP())
     {
         fresh_update = GetTime();
     }
@@ -2395,7 +2698,23 @@ void displayTimeStatic()
 void displayTimeRainbow()
 {
     bool fresh_update = false;
-    if (shouldUpdateNTP)
+    if (shouldUpdateNTP())
+    {
+        fresh_update = GetTime();
+    }
+    if (fresh_update || shouldUpdateTime())
+    {
+        if (incrementTime()  || fresh_update)
+        {
+            displayTime();
+        }
+    }
+}
+
+void displayTimeColorful()
+{
+    bool fresh_update = false;
+    if (shouldUpdateNTP())
     {
         fresh_update = GetTime();
     }
@@ -2403,8 +2722,61 @@ void displayTimeRainbow()
     {
         if (incrementTime() || fresh_update)
         {
-            displayTime();
+            CRGB x = CRGB(255, 0, 0);
+            DrawTime(x.r, x.g, x.b, 1);
+            DrawDots(x.r, x.g, x.b, 1);
         }
+    }
+    else if (updateColorsEverySecond) {
+        CRGB x = CRGB(255, 0, 0);
+        DrawTime(x.r, x.g, x.b, 1);
+        DrawDots(x.r, x.g, x.b, 1);
+    }
+}
+
+void displayTimeGradient()
+{
+    bool fresh_update = false;
+    if (shouldUpdateNTP())
+    {
+        fresh_update = GetTime();
+    }
+    if (fresh_update || shouldUpdateTime())
+    {
+        if (incrementTime() || fresh_update)
+        {
+            CRGB x = CRGB(255, 0, 0);
+            DrawTime(x.r, x.g, x.b, 5);
+            DrawDots(x.r, x.g, x.b, 5);
+        }
+    }
+    else if(updateColorsEverySecond){
+        CRGB x = CRGB(255, 0, 0);
+        DrawTime(x.r, x.g, x.b, 5);
+        DrawDots(x.r, x.g, x.b, 5);
+    }
+}
+
+void displayTimeGradientLarge()
+{
+    bool fresh_update = false;
+    if (shouldUpdateNTP())
+    {
+        fresh_update = GetTime();
+    }
+    if (fresh_update || shouldUpdateTime())
+    {
+        if (incrementTime() || fresh_update)
+        {
+            CRGB x = CRGB(255, 0, 0);
+            DrawTime(x.r, x.g, x.b, 3);
+            DrawDots(x.r, x.g, x.b, 3);
+        }
+    }
+    else if (updateColorsEverySecond) {
+        CRGB x = CRGB(255, 0, 0);
+        DrawTime(x.r, x.g, x.b, 3);
+        DrawDots(x.r, x.g, x.b, 3);
     }
 }
 
@@ -2412,44 +2784,57 @@ bool incrementTime()
 {
     bool retval = false;
     secs++;
-    last_diff = millis() - update_timestamp - 1000;
     update_timestamp = millis();
     if (secs >= 60)
     {
-        secs = 0;
+        secs -= 60;
         mins++;
         retval = true;
     }
     if (mins >= 60)
     {
-        mins = 0;
+        mins -= 60;
         hours++;
         retval = true;
     }
-    if (hours >= 24) hours = 0;
+    if (hours >= 24) hours -= 24;
+    PrintTime();
+    last_diff = millis() - update_timestamp - 1000;
     return retval;
 }
 
 
-void DrawTime(int r, int g, int b)
+void DrawTime(int r, int g, int b, int hueMode)
 {
 #define LEDS_PER_SEGMENT (Digit2 / 7)
     for (int l = 0; l < LEDS_PER_SEGMENT; l++)
     {
-        if (hours < 10) DrawDigit(Digit1 + l, LEDS_PER_SEGMENT, r, g, b, -1);        // Turn off leading zero
-        else DrawDigit(Digit1 + l, LEDS_PER_SEGMENT, r, g, b, hours / 10); //Draw the first digit of the hour
-        DrawDigit(Digit2 + l, LEDS_PER_SEGMENT, r, g, b, hours - ((hours / 10) * 10)); //Draw the second digit of the hour
+        if (hours < 10) DrawDigit(Digit1 + l, LEDS_PER_SEGMENT, r, g, b, -1, hueMode);        // Turn off leading zero
+        else DrawDigit(Digit1 + l, LEDS_PER_SEGMENT, r, g, b, hours / 10, hueMode); //Draw the first digit of the hour
+        DrawDigit(Digit2 + l, LEDS_PER_SEGMENT, r, g, b, hours - ((hours / 10) * 10), hueMode); //Draw the second digit of the hour
 
-        DrawDigit(Digit3 + l, LEDS_PER_SEGMENT, r, g, b, mins / 10); //Draw the first digit of the minute
-        DrawDigit(Digit4 + l, LEDS_PER_SEGMENT, r, g, b, mins - ((mins / 10) * 10)); //Draw the second digit of the minute
+        DrawDigit(Digit3 + l, LEDS_PER_SEGMENT, r, g, b, mins / 10, hueMode); //Draw the first digit of the minute
+        DrawDigit(Digit4 + l, LEDS_PER_SEGMENT, r, g, b, mins - ((mins / 10) * 10), hueMode); //Draw the second digit of the minute
     }
 }
 
-void dDHelper(int seg, int segmentLedCount, CRGB rgb = CRGB(0, 0, 0))
+void dDHelper(int offset, int seg, int segmentLedCount, int hueMode, CRGB rgb = CRGB(0, 0, 0) )
 {
-    for (int i = 0; i < segmentLedCount; i++)
-    {
-        leds[seg + i + seg * (segmentLedCount - 1)] = rgb;
+    if (hueMode != 0) {
+        for (int i = 0; i < segmentLedCount; i++)
+        {
+            int pos = offset + seg + i + seg * (segmentLedCount - 1);
+            int hue = map(pos, 0, NUM_LEDS, 0, (int)((double)255 / (double)hueMode)) + verySlowHue;
+            if (hue >= 255) hue -= 255;
+            CHSV col = CHSV(hue, 255, 255);
+            leds[pos] = col;
+        }
+    }
+    else {
+        for (int i = 0; i < segmentLedCount; i++)
+        {
+            leds[offset + seg + i + seg * (segmentLedCount - 1)] = rgb;
+        }
     }
 }
 
@@ -2464,65 +2849,65 @@ void dDHelper(int seg, int segmentLedCount, CRGB rgb = CRGB(0, 0, 0))
  * - b: blue component (0-255)
  * - n: value to be drawn (0-9)
  */
-void DrawDigit(int offset, int segmentLedCount, int r, int g, int b, int n)
+void DrawDigit(int offset, int segmentLedCount, int r, int g, int b, int n, int hueMode)
 {
     int s = segmentLedCount;
     CRGB rgb = CRGB(r, g, b);
     if (n == 2 || n == 3 || n == 4 || n == 5 || n == 6 || n == 8 || n == 9) //MIDDLE
     {
-        dDHelper(0, s, rgb);
+        dDHelper(offset, 0, s, hueMode, rgb);
     }
     else
     {
-        dDHelper(0, s);
+        dDHelper(offset, 0, s, 0);
     }
     if (n == 0 || n == 1 || n == 2 || n == 3 || n == 4 || n == 7 || n == 8 || n == 9) //TOP RIGHT
     {
-        dDHelper(1, s, rgb);
+        dDHelper(offset, 1, s, hueMode, rgb);
     }
     else
     {
-        dDHelper(1, s);
+        dDHelper(offset, 1, s, 0);
     }
     if (n == 0 || n == 2 || n == 3 || n == 5 || n == 6 || n == 7 || n == 8 || n == 9) //TOP
     {
-        dDHelper(2, s, rgb);
+        dDHelper(offset, 2, s, hueMode, rgb);
     }
     else
     {
-        dDHelper(2, s);
+        dDHelper(offset, 2, s, 0);
     }
     if (n == 0 || n == 4 || n == 5 || n == 6 || n == 8 || n == 9) //TOP LEFT
     {
-        dDHelper(3, s, rgb);
+        dDHelper(offset, 3, s, hueMode, rgb);
     }
     else
     {
-        dDHelper(3, s);
+        dDHelper(offset, 3, s, 0);
     }
     if (n == 0 || n == 2 || n == 6 || n == 8) //BOTTOM LEFT
     {
-        dDHelper(4, s, rgb);
+        dDHelper(offset, 4, s, hueMode, rgb);
     }
     else
     {
-        dDHelper(4, s);
+        dDHelper(offset, 4, s, 0);
     }
     if (n == 0 || n == 2 || n == 3 || n == 5 || n == 6 || n == 8 || n == 9) //BOTTOM
     {
-        dDHelper(5, s, rgb);
+        dDHelper(offset, 5, s, hueMode, rgb);
     }
     else
     {
-        dDHelper(5, s);
+        dDHelper(offset, 5, s, 0);
     }
     if (n == 0 || n == 1 || n == 3 || n == 4 || n == 5 || n == 6 || n == 7 || n == 8 || n == 9) //BOTTOM RIGHT
     {
-        dDHelper(6, s, rgb);
+        dDHelper(offset, 6, s, hueMode, rgb);
     }
     else
     {
-        dDHelper(6, s);
+        dDHelper(offset, 6, s, 0);
     }
 }
 #endif
@@ -2570,19 +2955,19 @@ bool parseUdp()
 
 //############################## Misc
 
-int getVolume(uint8_t vals[], int start, int end, double factor = 1.0)
+int getVolume(uint8_t vals[], int start, int end, double factor)
 {
-    int result = 0;
+    double result = 0;
     int iter = 0;
-    //Serial.printf("%d, start: %d, end: %d\n", vals[iter], start, end);
+    int cnt = 0;
+    //Serial.printf("Nr: %d, %d, start: %d, end: %d\n", iter, vals[iter], start, end);
     for (iter = start; iter <= end && vals[iter] != '\0'; iter++)
     {
-        //Serial.println(vals[iter]);
-        result += vals[iter];
+        //Serial.printf("Nr: %d, %d, start: %d, end: %d\n", iter, vals[iter], start, end);
+        result += ((double)vals[iter]*factor)/(end-start + 1);
     }
-    if (result == 0)return 0;
-    if(end > start)result = result / (end-start);
-    result = int(((double)result) * factor);
+    //Serial.println(result);
+    if (result <= 1) result = 0;
     if (result > 255)result = 255;
     return result;
 }
@@ -2604,8 +2989,8 @@ void BrightnessVisualizer()
 
     if (!parseUdp())return;
     //if (incomingPacket[0] != 0) 
-    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END);
-    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1);
+    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1);
+    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1, 1);
     if (avgVolume != 0)cd = ((double)currentVolume) / ((double)avgVolume);
     //Serial.printf("%d, %d, %lf\n", currentVolume, avgVolume, cd);
     if (currentVolume < 30)cd = 0;
@@ -2668,8 +3053,8 @@ void TrailingBulletsVisualizer()
         ShiftLeds(1);
         return;
     }
-    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END);
-    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1);
+    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1);
+    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1, 1);
     if (avgVolume != 0)cd = ((double)currentVolume) / ((double)avgVolume);
     if (currentVolume < 25)cd = 0;
     if (currentVolume > 230) cd += 0.15;
@@ -2717,7 +3102,7 @@ CHSV getVisualizerBulletValue(int hue, double cd)
 
 
 
-void vuMeter(CHSV c, int mode = 0)
+void vuMeter(CHSV c, int mode)
 {
     int vol = getVolume(incomingPacket, BAND_START, BAND_END, 1.75);
     fill_solid(leds, NUM_LEDS, CRGB::Black);
@@ -2775,6 +3160,166 @@ void vuMeterTriColor()
 #endif
 }
 
+int getPeakPosition() {
+    int pos = 0;
+    byte posval = 0;
+    for (int i = 0; i <= (PACKET_LENGTH - 1) && incomingPacket[i] != '\0'; i++)
+    {
+        if (incomingPacket[i] > posval) {
+            pos = i;
+            posval = incomingPacket[i];
+        }
+    }
+    if (posval < 30) pos = -1;
+    return pos;
+}
+
+void printPeak(CHSV c, int pos, int grpSize) {
+    fadeToBlackBy(leds, NUM_LEDS, 12);
+    leds[pos] = c;
+    CHSV c2 = c;
+    c2.v = 150;
+    for (int i = 0; i < ((grpSize - 1) / 2); i++)
+    {
+        leds[pos + i] = c;
+        leds[pos - i] = c;
+    }
+    
+}
+
+void peakVisualizer(CHSV c, bool newValues) {
+    static int lastPos = 0;
+    static int moveDir = 1; // 1: up, 0: down, 2: static
+    int newPos = lastPos;
+    if (newValues) {
+        newPos = getPeakPosition();
+        if (newPos > lastPos) moveDir = 1;
+        else if (newPos < lastPos) moveDir = 0;
+        else moveDir = 2;
+    }
+
+    int v = 3;
+    if (moveDir == 1 && (lastPos +v) <= newPos) {
+        lastPos += v;
+    }
+    else if (moveDir == 0 && (lastPos - v) >= newPos) {
+        lastPos -= v;
+    }
+
+    int update_rate = map(speed, 0, 70, 100, 0);
+    if (newPos == -1 || lastPos < 0) {
+        fadeToBlackBy(leds, NUM_LEDS, 5);
+        lastPos == -1;
+        moveDir = 2;
+    }
+    else if (update_rate >= 0)
+    {
+        printPeak(c, lastPos, v);
+        delay(update_rate);
+    }
+    else
+    {
+        int steps = map(update_rate, -264, 0, 8, 0);
+        ShiftLeds(steps);
+    }
+    //lastPos = newPos;
+}
+
+void RainbowPeaks()
+{
+    if (!parseUdp())
+    {
+        peakVisualizer(rgb2hsv_approximate(solidColor), false);
+    } else peakVisualizer(rgb2hsv_approximate(solidColor), true);
+}
+
+void RainbowKickRings()
+{
+    if (!parseUdp())
+    {
+        kickRingVisualizer(CHSV(gHue, 255, 255), false);
+    }
+    else kickRingVisualizer(CHSV(gHue, 255, 255), true);
+}
+
+void RainbowBassRings()
+{
+    if (!parseUdp())
+    {
+        bassRingVisualizer(CHSV(gHue, 255, 255), false);
+    }
+    else bassRingVisualizer(CHSV(gHue, 255, 255), true);
+}
+
+#define RING_FILL_PERCENTAGE 0.35
+#define RING_FADED_PERCENTAGE 0.25
+void bassRingVisualizer(CHSV c, bool newValues) {
+    static double position = 5.0;
+    if (newValues)
+    {
+        double currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1) / 200.0;
+        position += currentVolume * ((double)(map(speed, 0, 255, 10, 300) / 100.0)) * BAND_GROUPING;
+        if (position >= NUM_LEDS)position -= NUM_LEDS;
+    }
+    paintRing(c, position, NUM_LEDS * RING_FILL_PERCENTAGE, NUM_LEDS * RING_FADED_PERCENTAGE);
+}
+
+void kickRingVisualizer(CHSV c, bool newValues) {
+    static double position = 5.0;
+    static int i_pos = 0;
+    static int arrsize = 5;
+    static uint8_t lastVals[5] = { 1,1,1,1,1 };
+    int currentVolume = 0;
+    int avgVolume = 0;
+    double cd = 0;
+    if (newValues)
+    {
+        currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1);
+        avgVolume = getVolume(lastVals, 0, arrsize - 1, 1);
+        if (avgVolume != 0)cd = ((double)currentVolume) / ((double)avgVolume);
+        if (currentVolume < 33)cd = 0;
+        if (currentVolume > 230) cd += 0.15;
+        cd -= 0.2;
+        if (cd <= 0 || currentVolume < 33)cd = 0;
+        else cd += 0.2;
+        position += cd * 2 * ((double)(map(speed, 0, 255, 10, 300) / 100.0)) * BAND_GROUPING;
+        //Serial.printf("cur: %d, avg: %d, cd: %lf, pos: %lf\n", currentVolume, avgVolume, cd, position);
+        while (position >= NUM_LEDS)position -= NUM_LEDS;
+
+        if (i_pos >= arrsize)i_pos = 0;
+        lastVals[i_pos] = currentVolume;
+        i_pos++;
+    }
+    paintRing(c, position, NUM_LEDS * RING_FILL_PERCENTAGE, NUM_LEDS * RING_FADED_PERCENTAGE);
+}
+
+void paintRing(CHSV c, int pos, int fillLength, int fadedLength)
+{
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
+    for (int i = 0; i < fadedLength; i++)
+    {
+        leds[(i + pos) > (NUM_LEDS - 1) ? (i + pos - NUM_LEDS) : (i + pos)] = getFadedColor(c, fadedLength - i, fadedLength);
+    }
+    for (int i = 0; i < fillLength; i++)
+    {
+        leds[(i + pos + fadedLength) > (NUM_LEDS - 1) ? (i + pos + fadedLength - NUM_LEDS) : (i + pos + fadedLength)] = c;
+    }
+    for (int i = 0; i < fadedLength; i++)
+    {
+        leds[(i + pos + fadedLength + fillLength) > (NUM_LEDS - 1) ? (i + pos + fadedLength + fillLength - NUM_LEDS) : (i + pos + fadedLength + fillLength)] = getFadedColor(c, i, fadedLength);;
+    }
+}
+
+CHSV getFadedColor(CHSV c, int iter, int amount)
+{
+    c.val = (int)((double)c.val * ((double)(amount - iter)) / ((double)(amount+1.0)));
+    return c;
+}
+
+//void paintRing(CHSV c, int fillStart, int fillEnd, int fadedStart, int fadedEnd)
+//{
+//    return;
+//}
 
 void vuMeterSolid()
 {
@@ -2783,7 +3328,7 @@ void vuMeterSolid()
         fadeToBlackBy(leds, NUM_LEDS, 5);
         return;
     }
-    vuMeter(rgb2hsv_approximate(solidColor));
+    vuMeter(rgb2hsv_approximate(solidColor), 0);
 }
 
 void vuMeterStaticRainbow()
@@ -2813,7 +3358,7 @@ void vuMeterFading()
         fadeToBlackBy(leds, NUM_LEDS, 5);
         return;
     }
-    vuMeter(CHSV(gHue, 255, 255));
+    vuMeter(CHSV(gHue, 255, 255), 0);
 }
 
 void NanoleafWaves()
@@ -2831,8 +3376,8 @@ void NanoleafWaves()
         ShiftLeds(1);
         return;
     }
-    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END);
-    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1);
+    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1);
+    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1, 1);
     if (avgVolume != 0)cd = ((double)currentVolume) / ((double)avgVolume);
     if (currentVolume < 25)cd = 0;
     if (currentVolume > 230) cd += 0.15;
@@ -2875,8 +3420,8 @@ void RefreshingVisualizer()
         ShiftLeds(1);
         return;
     }
-    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END);
-    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1);
+    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1);
+    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1, 1);
     if (avgVolume != 0)cd = ((double)currentVolume) / ((double)avgVolume);
     if (currentVolume < 25)cd = 0;
     if (currentVolume > 230) cd += 0.15;
@@ -2919,8 +3464,8 @@ void DualToneBullets(int hueA, int hueB, int grpsz)
         ShiftLeds(1);
         return;
     }
-    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END);
-    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1);
+    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1);
+    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1, 1);
     if (avgVolume != 0)cd = ((double)currentVolume) / ((double)avgVolume);
     if (currentVolume < 25)cd = 0;
     if (currentVolume > 230) cd += 0.15;
@@ -2980,7 +3525,7 @@ void BluePurpleBullets() {
     DualToneBullets(240, 170, BULLET_COLOR_SIZE);
 }
 
-int expo(double x, double start = 0)
+int expo(double x, double start)
 {
     double res = 10.0 * (pow(1.02, x)) - 10.0 + start;
     if (res > 255)res = 255;
@@ -2988,7 +3533,7 @@ int expo(double x, double start = 0)
     return (int)res;
 }
 
-void Band(int grpSize, CRGB x, int mergePacket = 1)
+void Band(int grpSize, CRGB x, int mergePacket)
 {
     if (!parseUdp())
     {
@@ -3061,8 +3606,8 @@ void BulletVisualizer()
         return;
     }
     //if (incomingPacket[0] != 0) 
-    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END);
-    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1);
+    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1);
+    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1, 1);
     if (avgVolume != 0)cd = ((double)currentVolume) / ((double)avgVolume);
     if (currentVolume < 25)cd = 0;
     if (currentVolume > 230) cd += 0.15;
@@ -3106,8 +3651,8 @@ void CentralVisualizer()
         ShiftLedsCenter(1);
         return;
     }
-    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END);
-    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1);
+    currentVolume = getVolume(incomingPacket, BAND_START, BAND_END, 1);
+    avgVolume = getVolume(lastVals, 0, AVG_ARRAY_SIZE - 1, 1);
     if (avgVolume != 0)cd = ((double)currentVolume) / ((double)avgVolume);
     if (currentVolume < 25)cd = 0;
     if (currentVolume > 230) cd += 0.15;
@@ -3606,7 +4151,7 @@ void mainAlexaEvent(EspalexaDevice* d) {
     static int lb;
     if ((lr != NULL && lr != d->getR() && lg != d->getG() && lb != d->getB()) || currentPatternIndex == patternCount - 1)
     {
-        setSolidColor(d->getR(), d->getG(), d->getB());
+        setSolidColor(d->getR(), d->getG(), d->getB(), true);
         setPattern(patternCount - 1);
     }
     lr = d->getR();
@@ -3633,7 +4178,7 @@ void AlexaStrobeEvent(EspalexaDevice* d) {
     static int lb;
     if ((lr != NULL && lr != d->getR() && lg != d->getG() && lb != d->getB()) || currentPatternIndex == patternCount - 1)
     {
-        setSolidColor(d->getR(), d->getG(), d->getB());
+        setSolidColor(d->getR(), d->getG(), d->getB(), true);
         setPattern(12);
     }
     lr = d->getR();
@@ -4082,13 +4627,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
                 const char* ckey = o.key().c_str();
                 JsonVariant cv = o.value();
                 if (strcmp(ckey, "r") == 0) {
-                    cr = cv.as<int>();
+                    cr = cv.as<uint8_t>();
                 }
                 if (strcmp(ckey, "g") == 0) {
-                    cg = cv.as<int>();
+                    cg = cv.as<uint8_t>();
                 }
                 if (strcmp(ckey, "b") == 0) {
-                    cb = cv.as<int>();
+                    cb = cv.as<uint8_t>();
                 }
             }
             setSolidColor(cr, cg, cb, false);
