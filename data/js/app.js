@@ -11,6 +11,8 @@ var postValueTimer = {};
 
 var ignoreColorChange = false;
 
+var patternData = {};
+
 var ws = new ReconnectingWebSocket('ws://' + address + ':81/', ['arduino']);
 ws.debug = true;
 
@@ -26,7 +28,7 @@ ws.onmessage = function(evt) {
 $(document).ready(function() {
   $("#status").html("Connecting, please wait...");
 
-  $.get(urlBase + "all", function(data) {
+  $.get(urlBase + "config.json", function(data) {
       $("#status").html("Loading, please wait...");
 
       $.each(data, function(index, field) {
@@ -44,6 +46,9 @@ $(document).ready(function() {
         } else if (field.type == "Setting") {
           handleSetting(field);
         }
+        if (field.name == "pattern") {
+          patternData = field;
+        }
       });
 
       $(".minicolors").minicolors({
@@ -53,6 +58,8 @@ $(document).ready(function() {
         format: "rgb",
         inline: true
       });
+
+      updateDisplayedFields();
 
       $("#status").html("Ready");
     })
@@ -158,7 +165,7 @@ function addSelectField(field) {
   select.attr("id", id);
 
   for (var i = 0; i < field.options.length; i++) {
-    var optionText = field.options[i];
+    var optionText = field.options[i].name;
     var option = $("<option></option>");
     option.text(optionText);
     option.attr("value", i);
@@ -170,6 +177,9 @@ function addSelectField(field) {
   select.change(function() {
     var value = template.find("#" + id + " option:selected").index();
     postValue(field.name, value);
+    if (field.name == "pattern") {
+      updateDisplayedFields(value);
+    }
   });
 
   var previousButton = template.find(".btn-previous");
@@ -183,6 +193,9 @@ function addSelectField(field) {
       value = count - 1;
     select.val(value);
     postValue(field.name, value);
+    if (field.name == "pattern") {
+      updateDisplayedFields(value);
+    }
   });
 
   nextButton.click(function() {
@@ -193,6 +206,9 @@ function addSelectField(field) {
       value = 0;
     select.val(value);
     postValue(field.name, value);
+    if (field.name == "pattern") {
+      updateDisplayedFields(value);
+    }
   });
 
   $("#form").append(template);
@@ -389,44 +405,39 @@ function updateFieldValue(name, value) {
   } else if (type == "Select") {
     var select = group.find(".form-control");
     select.val(value);
+    if (name == "pattern") {
+      updateDisplayedFields(value);
+    }
   } else if (type == "Color") {
     var input = group.find(".form-control");
     input.val("rgb(" + value + ")");
   }
 }
 
-function handleSetting(field) {
-  console.log(field);
+function handleSetting(config) {
 
-  if (field.name == "hostname") {
-    $("#inputHostname").val(field.value);
+  for (let [key, value] of Object.entries(config.value)) {
+    if (key.includes("Support") && value == true) {
+      $("#" + key + "Entry").removeClass("hidden");
+    } else {
+      $("#input-" + key).val(value);
+    }
   }
 
-  if (field.name.includes("Support") && field.value == false) {
-    $("#" + field.name + "Entry").addClass("hidden");
-  }
-  if (field.name == "mqttSettings") {
-    $("#btnOnmqtt").attr("class", field.enabled ? "btn btn-primary" : "btn btn-default");
-    $("#btnOffmqtt").attr("class", !field.enabled ? "btn btn-primary" : "btn btn-default");
-    $("#inputMqttEnabled").val(field.enabled ? "1" : "0");
+  $("#btnOnmqtt").attr("class", config.value.mqttEnabled ? "btn btn-primary" : "btn btn-default");
+  $("#btnOffmqtt").attr("class", !config.value.mqttEnabled ? "btn btn-primary" : "btn btn-default");
 
-    $("#btnOnmqtt").click(function() {
-      $("#btnOnmqtt").attr("class", "btn btn-primary");
-      $("#btnOffmqtt").attr("class", "btn btn-default");
-      $("#inputMqttEnabled").val("1");
-    });
-    $("#btnOffmqtt").click(function() {
-      $("#btnOnmqtt").attr("class", "btn btn-default");
-      $("#btnOffmqtt").attr("class", "btn btn-primary");
-      $("#inputMqttEnabled").val("0");
-    });
+  $("#btnOnmqtt").click(function() {
+    $("#btnOnmqtt").attr("class", "btn btn-primary");
+    $("#btnOffmqtt").attr("class", "btn btn-default");
+    $("#input-mqttEnabled").val("1");
+  });
+  $("#btnOffmqtt").click(function() {
+    $("#btnOnmqtt").attr("class", "btn btn-default");
+    $("#btnOffmqtt").attr("class", "btn btn-primary");
+    $("#input-mqttEnabled").val("0");
+  });
 
-    $("#inputMqttHostname").val(field.hostname);
-    $("#inputMqttPort").val(field.port);
-    $("#inputMqttUser").val(field.username);
-    $("#inputMqttTopic").val(field.topic);
-    $("#inputMqttDeviceName").val(field.devicename);
-  }
 }
 
 function setBooleanFieldValue(field, btnOn, btnOff, value) {
@@ -495,4 +506,59 @@ function rgbToComponents(rgb) {
   components.b = parseInt(rgb[3]);
 
   return components;
+}
+
+function updateDisplayedFields(pattern = null) {
+
+  // default value
+  var pattern_index = patternData.value;
+
+  if (pattern != null) {
+    pattern_index = pattern;
+  }
+
+  this_pattern = patternData.options[pattern_index];
+
+  if (this_pattern.show_palette == false) {
+    $("#form-group-palette").addClass("hidden");
+  } else {
+    $("#form-group-palette").removeClass("hidden");
+  }
+
+  if (this_pattern.show_speed == false) {
+    $("#form-group-speed").addClass("hidden");
+  } else {
+    $("#form-group-speed").removeClass("hidden");
+  }
+
+  if (this_pattern.show_color_picker == false) {
+    $("#form-group-section-solidColor").addClass("hidden");
+    $("#colorPaletteTemplate").addClass("hidden");
+    $("#form-group-solidColor").addClass("hidden");
+  } else {
+    $("#form-group-section-solidColor").removeClass("hidden");
+    $("#colorPaletteTemplate").removeClass("hidden");
+    $("#form-group-solidColor").removeClass("hidden");
+  }
+
+  if (this_pattern.show_cooling_sparking == false) {
+    $("#form-group-section-fire").addClass("hidden");
+    $("#form-group-cooling").addClass("hidden");
+    $("#form-group-sparking").addClass("hidden");
+  } else {
+    $("#form-group-section-fire").removeClass("hidden");
+    $("#form-group-cooling").removeClass("hidden");
+    $("#form-group-sparking").removeClass("hidden");
+  }
+
+  if (this_pattern.show_twinkle == false) {
+    $("#form-group-section-twinkles").addClass("hidden");
+    $("#form-group-twinkleSpeed").addClass("hidden");
+    $("#form-group-twinkleDensity").addClass("hidden");
+  } else {
+    $("#form-group-section-twinkles").removeClass("hidden");
+    $("#form-group-twinkleSpeed").removeClass("hidden");
+    $("#form-group-twinkleDensity").removeClass("hidden");
+  }
+
 }

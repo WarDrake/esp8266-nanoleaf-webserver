@@ -29,11 +29,11 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="https://www.evilgeniuslabs.org" target="_blank"><img src="images/atom196.png" style="width: 24px; height: 24px;" /></a>
-        <a class="navbar-brand" href="https://www.evilgeniuslabs.org" target="_blank">Evil Genius Labs</a>
-        <div class="navbar-brand">&</div>
-		    <a class="navbar-brand" href="https://www.thingiverse.com/Surrbradl08/designs" target="_blank"><img src="images/surr.png" style="width: 24px; height: 24px;" /></a>
-        <a class="navbar-brand" href="https://www.thingiverse.com/Surrbradl08/designs" target="_blank">Surrbradl08</a>
+        <a class="navbar-brand" href="https://www.evilgeniuslabs.org" target="_blank"><img src="images/atom196.png" style="width: 22px; height: 22px;" /></a>
+        <a class="navbar-brand" href="https://www.evilgeniuslabs.org" target="_blank" style="font-size: 16px;">Evil Genius Labs</a>
+        <div class="navbar-brand" style="font-size: 16px;">&</div>
+		    <a class="navbar-brand" href="https://www.thingiverse.com/Surrbradl08/designs" target="_blank"><img src="images/surr.png" style="width: 22px; height: 22px;" /></a>
+        <a class="navbar-brand" href="https://www.thingiverse.com/Surrbradl08/designs" target="_blank" style="font-size: 16px;">Surrbradl08</a>
       </div>
       <div class="collapse navbar-collapse" id="navbar-collapse-1">
         <ul class="nav navbar-nav">
@@ -87,11 +87,11 @@
         <label for="inputHostname" class="col-sm-2 control-label">Hostname</label>
         <div class="col-sm-10">
           <input type="text" autocorrect="off" autocapitalize="none"
-            class="form-control" id="inputHostname" name="hostname" placeholder="Hostname">
+            class="form-control" id="input-deviceHostname" name="hostname" placeholder="Hostname">
         </div>
       </div>
 
-      <div id="mqttSupportEntry">
+      <div id="mqttSupportEntry" class="hidden">
         <div class="form-group">
           <div class="col-sm-offset-2 col-sm-10">
             <hr style="margin-bottom: 5px;margin-top: 5px;" />
@@ -104,28 +104,28 @@
               <button type="button" class="btn btn-default" id="btnOnmqtt">On</button>
               <button type="button" class="btn btn-default" id="btnOffmqtt">Off</button>
             </div>
-            <input type="hidden" id="inputMqttEnabled" name="mqtt-enabled">
+            <input type="hidden" id="input-mqttEnabled" name="mqtt-enabled">
           </div>
         </div>
         <div class="form-group">
           <label for="inputMqttHostname" class="col-sm-2 control-label">MQTT Hostname</label>
           <div class="col-sm-10">
             <input type="text" autocorrect="off" autocapitalize="none"
-              class="form-control" id="inputMqttHostname" name="mqtt-hostname" placeholder="MQTT host name">
+              class="form-control" id="input-mqttHostname" name="mqtt-hostname" placeholder="MQTT host name">
           </div>
         </div>
         <div class="form-group">
           <label for="inputMqttPort" class="col-sm-2 control-label">MQTT Port</label>
           <div class="col-sm-10">
             <input type="text" autocorrect="off" autocapitalize="none"
-              class="form-control" id="inputMqttPort" name="mqtt-port" placeholder="MQTT host port">
+              class="form-control" id="input-mqttPort" name="mqtt-port" placeholder="MQTT host port">
           </div>
         </div>
         <div class="form-group">
           <label for="inputMqttUser" class="col-sm-2 control-label">MQTT Username</label>
           <div class="col-sm-10">
             <input type="text" autocorrect="off" autocapitalize="none"
-              class="form-control" id="inputMqttUser" name="mqtt-user" placeholder="MQTT username">
+              class="form-control" id="input-mqttUsername" name="mqtt-user" placeholder="MQTT username">
           </div>
         </div>
         <div class="form-group">
@@ -139,14 +139,14 @@
           <label for="inputMqttTopic" class="col-sm-2 control-label">MQTT Topic</label>
           <div class="col-sm-10">
             <input type="text" autocorrect="off" autocapitalize="none"
-              class="form-control" id="inputMqttTopic" name="mqtt-topic" placeholder="MQTT topic">
+              class="form-control" id="input-mqttTopic" name="mqtt-topic" placeholder="MQTT topic">
           </div>
         </div>
         <div class="form-group">
           <label for="inputMqttDeviceName" class="col-sm-2 control-label">MQTT Device Name</label>
           <div class="col-sm-10">
             <input type="text" autocorrect="off" autocapitalize="none"
-              class="form-control" id="inputMqttDeviceName" name="mqtt-device-name" placeholder="MQTT device name">
+              class="form-control" id="input-mqttDevicename" name="mqtt-device-name" placeholder="MQTT device name">
           </div>
         </div>
       </div>
@@ -162,8 +162,8 @@
           <button type="submit" class="btn btn-default">Update</button>
           <a role="button" data-toggle="modal" data-target="#reset_modal" data-action="add" class="pull-right btn btn-danger" style="margin-left: 10px;" title="Reset">RESET</a>
           <a role="button" href='/reboot' class="pull-right btn btn-info" style="margin-left: 10px;" title="Reboot">Reboot</a>
-          <a id="alexaSupportEntry" role="button" href='/alexa' target="_blank" class="pull-right btn btn-success" style="margin-left: 10px;" title="Alexa">Alexa Pairing</a>
-          <a id="otaSupportEntry" role="button" href="/ota" target="_blank" class="pull-right btn btn-success" title="OTA">OTA Update</a>
+          <a id="alexaSupportEntry" role="button" href='/alexa' target="_blank" class="pull-right btn btn-success hidden" style="margin-left: 10px;" title="Alexa">Alexa Pairing</a>
+          <a id="otaSupportEntry" role="button" href="/ota" target="_blank" class="pull-right btn btn-success hidden" title="OTA">OTA Update</a>
 
         </div>
       </div>

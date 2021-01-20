@@ -27,27 +27,27 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="https://www.evilgeniuslabs.org" target="_blank"><img src="images/atom196.png" style="width: 24px; height: 24px;" /></a>
-        <a class="navbar-brand" href="https://www.evilgeniuslabs.org" target="_blank">Evil Genius Labs</a>
-        <div class="navbar-brand">&</div>
-		    <a class="navbar-brand" href="https://www.thingiverse.com/Surrbradl08/designs" target="_blank"><img src="images/surr.png" style="width: 24px; height: 24px;" /></a>
-        <a class="navbar-brand" href="https://www.thingiverse.com/Surrbradl08/designs" target="_blank">Surrbradl08</a>
+        <a class="navbar-brand" href="https://www.evilgeniuslabs.org" target="_blank"><img src="images/atom196.png" style="width: 22px; height: 22px;" /></a>
+        <a class="navbar-brand" href="https://www.evilgeniuslabs.org" target="_blank" style="font-size: 16px;">Evil Genius Labs</a>
+        <div class="navbar-brand" style="font-size: 16px;">&</div>
+		    <a class="navbar-brand" href="https://www.thingiverse.com/Surrbradl08/designs" target="_blank"><img src="images/surr.png" style="width: 22px; height: 22px;" /></a>
+        <a class="navbar-brand" href="https://www.thingiverse.com/Surrbradl08/designs" target="_blank" style="font-size: 16px;">Surrbradl08</a>
       </div>
       <div class="collapse navbar-collapse" id="navbar-collapse-1">
-          <ul class="nav navbar-nav">
-              <li class="active bg-light"><a href="/" class="bg-light" title="Home">Home <span class="sr-only bg-light">(current)</span></a></li>
-              <li><a href="/simple.htm" title="Simple Page">Simple</a></li>
-              <li><a href="/settings.htm" title="Settings">Settings</a></li>
-              <li>
-                  <a>
-                      <div class="custom-control custom-switch">
-                          <input type="checkbox" class="custom-control-input" id="darkSwitch" />
-                          <label class="custom-control-label" for="darkSwitch">Dark Mode</label>
-                      </div>
-                      <script src="js/dark-mode-switch.min.js"></script>
-                  </a>
-              </li>
-          </ul>
+        <ul class="nav navbar-nav">
+          <li class="active bg-light"><a href="/" class="bg-light" title="Home">Home <span class="sr-only bg-light">(current)</span></a></li>
+          <li><a href="/simple.htm" title="Simple Page">Simple</a></li>
+          <li><a href="/settings.htm" title="Settings">Settings</a></li>
+          <li>
+            <a>
+              <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="darkSwitch" />
+                <label class="custom-control-label" for="darkSwitch">Dark Mode</label>
+              </div>
+              <script src="js/dark-mode-switch.min.js"></script>
+            </a>
+          </li>
+        </ul>
         <ul class="nav navbar-nav navbar-right">
           <li>
             <a href="https://github.com/NimmLor/esp8266-fastled-iot-webserver">
@@ -195,33 +195,21 @@
         </div>
       </div>
     </div>
-
   </div>
 
   <nav class="navbar navbar-default navbar-fixed-bottom bg-light">
-    <div class="container">
+    <div class="container-fluid">
       <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-2" aria-expanded="false">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-      </div>
-      <div class="collapse navbar-collapse" id="navbar-collapse-2">
-        <ul class="nav navbar-nav">
-          <li>
-            <a href="/" aria-label="Refresh" title="Refresh">
-              <span class="glyphicon glyphicon-refresh" id="btnRefresh"></span>
-            </a>
-          </li>
-          <li><p class="navbar-text" id="status">Loading, please wait...</p></li>
-        </ul>
+        <a href="/" aria-label="Refresh" title="Refresh">
+          <span class="glyphicon glyphicon-refresh navbar-brand" style="font-size: 14px;" id="btnRefresh"></span>
+        </a>
+        <div class="navbar-header">
+          <p class="navbar-text" id="status">Loading, please wait...</p>
+        </div>
       </div>
     </div>
   </nav>
 
-  
   <!-- request js from the ESP8266 web server -->
   <script src="js/jquery-3.1.1.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
