@@ -163,27 +163,28 @@ The firmware implements basic [RESTful web services](https://en.wikipedia.org/wi
 
 The MQTT integration by default sets up a light domain autodiscovery for home assistant, should you want to send MQTT commands from a different system or manually the syntax is as follows
 
-Topic : MQTT_TOPIC MQTT_TOPIC_SET
-example : "homeassistant/light/nanoleafs/set" in the case of the nanoleafs if you use default values, adjust for any changes you make to the previous two configuration variables
+**Topic :** MQTT_TOPIC / MQTT_TOPIC_SET  
+example : "homeassistant/light/nanoleafs/set" in the case of the nanoleafs if you use default values, adjust for any changes you make to the previous two configuration variables  
 
-payload : this is a json formatted string with parameters, you can send one or multiple parameters, please note that to change most of them the light must be on, so sending an on command on every request other than off is a good idea.
+**payload :** this is a json formatted string with parameters, you can send one or multiple parameters, please note that to change most of them the light must be on, so sending an on command on every request other than off is a good idea.  
 
-commands :
-    state       : values  ON or OFF
-    brightness  : values  1 to 255
-    autoplay    : values  ON or OFF
-    speed       : values  1 to 255
-    effect      : values  Pattern name as a quoted string.
-    color       : values  [1..255,1..255,1..255]
+**commands :**  
+    state       : values  ON or OFF  
+    brightness  : values  1 to 255  
+    autoplay    : values  ON or OFF  
+    speed       : values  1 to 255  
+    effect      : values  Pattern name as a quoted string.  
+    color       : values  [1..255,1..255,1..255]  
 
-command examples :
-    turn lights on            : {"state": "ON"}
-    Set brightness to 50%     : {"state": "ON", "brightness": 127}
-    Set animation speed to 16 : {"speed": "16"}
-    Set animation autoplay on : {"autoplay": "ON"}
-    Set animation pattern     : {"state": "ON", "effect": "Sinelon"}
-    Set solid color           : {"state": "ON", "color": {"r": 72, "g": 255, "b": 163}}
+**command examples :**  
+    turn lights on            : `{"state": "ON"}`  
+    turn lights off           : `{"state": "OFF"}`  
+    Set brightness to 50%     : `{"state": "ON", "brightness": 127}`  
+    Set animation speed to 16 : `{"speed": "16"}`  
+    Set animation autoplay on : `{"autoplay": "ON"}`  
+    Set animation pattern     : `{"state": "ON", "effect": "Sinelon"}`  
+    Set a solid color         : `{"state": "ON", "color": {"r": 72, "g": 255, "b": 163}}`  
 
-you can combine multiple commands in a single payload, for example
-    Set lights on, with a brightness of 50%, animation speed of 25, animation autplay off and the pride pattern.
-    ex : {"state": "ON", "brightness": 127, "speed": "25", "autoplay": "OFF", "effect": "Pride"}
+you can combine multiple commands in a single payload, for example  
+    Set lights on, with a brightness of 50%, animation speed of 25, animation autplay off and the pride pattern.  
+    ex : `{"state": "ON", "brightness": 127, "speed": "25", "autoplay": "OFF", "effect": "Pride"}`  
