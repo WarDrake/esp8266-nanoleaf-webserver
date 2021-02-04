@@ -46,8 +46,8 @@ The video wasn't updated for the new update, so the library versions are incorre
    
    ![](software_screenshots/FastLED.png?raw=true)
    
-6. Install the **WiFiManager by Tapzu**
-   Click on *Sketch >> Include Library >> Manage Libraries* and install **WiFiManager by Tapzu**
+6. Install the **WiFiManager by tzapu**
+   Click on *Sketch >> Include Library >> Manage Libraries* and install **WiFiManager by tzapu**
    
    ![](software_screenshots/wifi-manager.jpg?raw=true)
 

@@ -1336,7 +1336,7 @@ void loop() {
                 Serial.println("connected \n");
 
                 Serial.println("Subscribing to MQTT Topics \n");
-                mqttClient.subscribe(MQTT_TOPIC MQTT_TOPIC_SET);
+                mqttClient.subscribe(cfg.MQTTTopic MQTT_TOPIC_SET);
 
                 DynamicJsonDocument JSONencoder(4096);
                     JSONencoder["~"] = cfg.MQTTTopic,
@@ -1358,7 +1358,7 @@ void loop() {
                     effect_list.add(patterns[i].name);
                 }
                 size_t n = measureJson(JSONencoder);
-                if (mqttClient.beginPublish(MQTT_TOPIC "/config", n, true) == true) {
+                if (mqttClient.beginPublish(cfg.MQTTTopic "/config", n, true) == true) {
                     Serial.println("Configuration Publishing Begun");
                     if (serializeJson(JSONencoder, mqttClient) == n){
                          Serial.println("Configuration Sent");
@@ -4583,7 +4583,7 @@ void sendStatus()
     uint8_t JSONmessage[128];
     size_t n = serializeJson(JSONencoder, JSONmessage);
     if (!mqttProcessing){
-        mqttClient.publish(MQTT_TOPIC, JSONmessage, n, true);
+        mqttClient.publish(cfg.MQTTTopic, JSONmessage, n, true);
     }
 }
 #endif // ENABLE_MQTT_SUPPORT
