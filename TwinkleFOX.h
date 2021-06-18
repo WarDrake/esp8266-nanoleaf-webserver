@@ -66,9 +66,9 @@
 uint8_t twinkleSpeed = 4;
 
 // Overall twinkle density.
-// 0 (NONE lit) to 8 (ALL lit at once).
-// Default is 5.
-uint8_t twinkleDensity = 5;
+// 0 (NONE lit) to 255 (ALL lit at once).
+// Default is 160.
+uint8_t twinkleDensity = 160;
 
 // Background color for 'unlit' pixels
 // Can be set to CRGB::Black if desired.
@@ -140,7 +140,7 @@ CRGB computeOneTwinkle( uint32_t ms, uint8_t salt)
   uint8_t slowcycle8 = (slowcycle16 & 0xFF) + (slowcycle16 >> 8);
 
   uint8_t bright = 0;
-  if( ((slowcycle8 & 0x0E)/2) < twinkleDensity) {
+  if( ((slowcycle8 & 0x0E)/2) < map(twinkleDensity, 0, 255, 0, 8)) {
     bright = attackDecayWave8( fastcycle8);
   }
 

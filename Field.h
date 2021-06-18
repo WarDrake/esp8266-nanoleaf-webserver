@@ -26,7 +26,7 @@ const String SelectFieldType = "Select";
 const String ColorFieldType = "Color";
 const String SectionFieldType = "Section";
 
-typedef struct Field {
+typedef struct {
   String name;
   String label;
   String type;
@@ -35,7 +35,7 @@ typedef struct Field {
   FieldGetter getValue;
   FieldGetter getOptions;
   FieldSetter setValue;
-};
+} Field;
 
 typedef Field FieldList[];
 

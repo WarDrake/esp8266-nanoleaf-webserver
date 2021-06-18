@@ -1,10 +1,26 @@
+:root {
+
+  --bg: #202123;
+  --grey: #2b2c2e;
+  --lgrey: #313234;
+  --ltext: #8E8E8F;
+  --text: #FAFAFA;
+  --icons: #353638;
+  --highlights: #1A1B1D;
+  --accent: #738cfe;
+}
+
+[data-theme="dark"] .navbar-default {
+  border: 0px !important;
+}
+
 [data-theme="dark"] {
-  background-color: #111 !important;
+  background-color: var(--bg);
   color: #aaa;
 }
 
 [data-theme="dark"] .bg-light {
-  background-color: #333 !important;
+  background-color: var(--grey) !important;
 }
 
 [data-theme="dark"] .bg-white {
@@ -30,7 +46,7 @@
 }
 
 [data-theme="dark"]  .form-control {
-  background-color: #333 !important;
+  background-color: var(--bg) !important;
   border-color:#444 !important;
   color: #fff;
 }
